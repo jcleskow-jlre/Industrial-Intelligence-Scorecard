@@ -119,9 +119,181 @@
     .chart-panel canvas{height:340px!important}
     @media(max-width:1300px){.metric-grid{grid-template-columns:repeat(2,1fr)}.workspace,.add-workspace,.presentation-grid{grid-template-columns:1fr}.right-panel-sticky{position:static}}
     @media(max-width:1100px){.app{grid-template-columns:1fr}.app header,.app aside,.app main{grid-column:1}aside{border-right:none;border-bottom:1px solid var(--line);display:flex;gap:8px;overflow:auto}.nav-pill{min-width:170px}.metric-grid,.workspace{grid-template-columns:1fr}.header-actions{justify-content:flex-start}.form-grid,.form-grid.three{grid-template-columns:1fr}}
+  
+
+    /* Market-intelligence style landing page */
+    body.landing-active .app{display:none}
+    .landing-page{position:fixed;inset:0;z-index:9000;background:#080a12;color:#fff;display:none;overflow:hidden;font-family:Arial, Helvetica, sans-serif}
+    body:not(.locked).landing-active .landing-page{display:block}
+    .landing-page *{box-sizing:border-box}
+    .landing-bg{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at 12% 14%,rgba(255,223,0,.22),transparent 23%),radial-gradient(circle at 72% 10%,rgba(35,130,145,.26),transparent 28%),radial-gradient(circle at 82% 88%,rgba(255,223,0,.12),transparent 34%),linear-gradient(135deg,#25273A 0%,#141724 46%,#070912 100%)}
+    .landing-bg:before{content:"";position:absolute;inset:-10%;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:58px 58px;transform:perspective(900px) rotateX(58deg) rotateZ(-8deg) translateY(-70px);transform-origin:top;animation:landingGrid 18s linear infinite;opacity:.78}
+    .landing-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,18,.98) 0%,rgba(8,10,18,.84) 42%,rgba(8,10,18,.56) 68%,rgba(8,10,18,.34) 100%)}
+    @keyframes landingGrid{0%{background-position:0 0,0 0}100%{background-position:58px 58px,58px 58px}}
+    .aurora{position:absolute;border-radius:999px;filter:blur(42px);opacity:.45;mix-blend-mode:screen}.aurora.a1{width:360px;height:360px;background:#FFDF00;left:58%;top:4%;animation:floatOrb 12s ease-in-out infinite}.aurora.a2{width:440px;height:440px;background:#238291;right:-90px;bottom:4%;animation:floatOrb 15s ease-in-out infinite reverse}.aurora.a3{width:260px;height:260px;background:#42B8D4;left:34%;bottom:-80px;animation:floatOrb 14s ease-in-out infinite}
+    @keyframes floatOrb{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(18px,-24px,0) scale(1.08)}}
+    .landing-shell{position:relative;z-index:2;height:100vh;padding:24px 30px 28px;display:flex;flex-direction:column;gap:22px;overflow:hidden}
+    .landing-top{height:64px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex:0 0 auto}
+    .landing-brand{display:flex;align-items:center;gap:16px}.landing-logo{width:132px;height:50px;background:var(--savills-yellow);color:#000;display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:900;letter-spacing:.2px;box-shadow:0 18px 42px rgba(255,223,0,.18)}.landing-kicker{font-size:11px;text-transform:uppercase;letter-spacing:.2em;color:rgba(255,255,255,.62);font-weight:900}.landing-titlebar{font-size:20px;font-weight:900;margin-top:4px;letter-spacing:-.02em}
+    .landing-status{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.status-pill{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);backdrop-filter:blur(16px);border-radius:999px;padding:9px 12px;font-size:11px;font-weight:900;color:rgba(255,255,255,.86);box-shadow:0 12px 30px rgba(0,0,0,.18)}.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--savills-yellow);margin-right:7px;box-shadow:0 0 18px rgba(255,223,0,.75)}
+    .landing-main{display:grid;grid-template-columns:minmax(440px,.76fr) minmax(680px,1.24fr);gap:28px;align-items:center;min-height:0;flex:1}
+    .landing-hero{padding-left:4px;position:relative;z-index:4}.hero-eyebrow{display:inline-flex;gap:9px;align-items:center;border:1px solid rgba(255,223,0,.36);background:rgba(255,223,0,.10);color:#fff;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.13em;margin-bottom:20px;box-shadow:0 0 40px rgba(255,223,0,.08)}.hero-eyebrow span{width:9px;height:9px;border-radius:50%;background:var(--savills-yellow);box-shadow:0 0 20px rgba(255,223,0,.76)}
+    .landing-hero h2{font-size:64px;line-height:.93;margin:0 0 20px;letter-spacing:-.06em;font-weight:900;max-width:780px}.landing-hero h2 mark{background:var(--savills-yellow);color:#000;padding:0 .08em;box-decoration-break:clone}.hero-copy{font-size:17px;line-height:1.5;color:rgba(255,255,255,.76);max-width:680px;margin:0 0 24px}.hero-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:24px}.hero-actions button,.hero-actions .btn{height:48px;padding:0 18px;border-radius:12px;font-size:12px;letter-spacing:.02em}.hero-actions .primary{font-weight:900;background:var(--savills-yellow);border-color:var(--savills-yellow);color:#000}.hero-actions .dark{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22);color:#fff}.hero-actions .dark:hover{background:rgba(255,255,255,.12)}
+    .landing-metrics{display:grid;grid-template-columns:repeat(3,minmax(130px,1fr));gap:12px;max-width:650px;margin-bottom:18px}.landing-metric{border:1px solid rgba(255,255,255,.13);background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.055));backdrop-filter:blur(15px);border-radius:18px;padding:14px 15px;box-shadow:0 20px 55px rgba(0,0,0,.20)}.landing-metric .lm-label{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:rgba(255,255,255,.56);font-weight:900}.landing-metric .lm-value{font-size:32px;font-weight:900;margin-top:5px;color:#fff;letter-spacing:-.04em}.landing-metric .lm-note{font-size:11px;color:rgba(255,255,255,.54);margin-top:3px}.hero-footnote{font-size:12px;color:rgba(255,255,255,.56);line-height:1.45;max-width:620px}
+    .landing-process{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:650px;margin-top:15px}.process-card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);border-radius:14px;padding:12px 12px 13px;position:relative;overflow:hidden}.process-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--savills-yellow)}.process-card b{display:block;font-size:12px;margin-bottom:4px}.process-card span{font-size:11px;line-height:1.35;color:rgba(255,255,255,.58)}
+    .intelligence-stage{position:relative;min-height:650px;perspective:1200px}.dashboard-render{position:absolute;right:0;top:8px;width:min(900px,100%);height:610px;transform:rotateY(-9deg) rotateX(2deg);transform-origin:center;filter:drop-shadow(0 38px 80px rgba(0,0,0,.46))}.dash-frame{position:absolute;inset:0;border:1px solid rgba(255,255,255,.16);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.045));backdrop-filter:blur(22px);overflow:hidden;box-shadow:inset 0 1px rgba(255,255,255,.22)}.dash-header{height:64px;background:rgba(37,39,58,.92);border-bottom:4px solid var(--savills-yellow);display:flex;align-items:center;justify-content:space-between;padding:0 18px}.dash-logo{width:92px;height:34px;background:var(--savills-yellow);color:#000;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:18px}.dash-title{font-size:13px;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.72);font-weight:900}.dash-live{font-size:11px;color:#fff;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);border-radius:999px;padding:7px 10px;font-weight:900}.dash-body{position:absolute;left:0;right:0;top:64px;bottom:0;display:grid;grid-template-columns:178px 1fr 250px;background:#eef0f4;color:#111827}.dash-rail{background:#fff;border-right:1px solid #d8dde7;padding:14px 12px}.rail-tab{height:40px;border-radius:11px;margin-bottom:9px;background:#f3f5f8;color:#687083;font-size:11px;font-weight:900;display:flex;align-items:center;padding-left:12px}.rail-tab.active{background:var(--savills-navy);color:#fff;border-left:4px solid var(--savills-yellow)}.rail-note{position:absolute;left:14px;bottom:18px;width:148px;background:#fff8cf;border:1px solid #e4c900;border-radius:13px;padding:10px;color:#383200;font-size:10px;line-height:1.35}
+    .dash-center{padding:14px;display:grid;grid-template-rows:86px 1fr;gap:12px;min-width:0}.dash-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.dash-kpi{background:#fff;border:1px solid #d9dde5;border-radius:16px;padding:13px;box-shadow:0 12px 28px rgba(20,24,36,.08)}.dash-kpi small{display:block;text-transform:uppercase;letter-spacing:.1em;color:#7b8292;font-weight:900;font-size:9px}.dash-kpi strong{display:block;font-size:28px;color:var(--savills-navy);line-height:1;margin-top:8px}.dash-map{position:relative;border-radius:18px;overflow:hidden;border:1px solid #d8dde7;background:#39473e;box-shadow:0 14px 40px rgba(20,24,36,.12)}
+    .dash-map:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 24%,rgba(160,190,130,.55),transparent 18%),radial-gradient(circle at 68% 36%,rgba(116,150,103,.45),transparent 19%),linear-gradient(135deg,#314537,#1c3544 55%,#102634);filter:saturate(1.15)}.dash-map:after{content:"";position:absolute;inset:0;background:linear-gradient(32deg,transparent 0 36%,rgba(255,223,0,.65) 36.3%,rgba(255,223,0,.65) 36.8%,transparent 37.1%),linear-gradient(116deg,transparent 0 58%,rgba(255,223,0,.38) 58.2%,rgba(255,223,0,.38) 58.8%,transparent 59.1%),linear-gradient(74deg,transparent 0 46%,rgba(255,255,255,.18) 46.2%,transparent 46.7%),linear-gradient(154deg,transparent 0 66%,rgba(255,255,255,.12) 66.2%,transparent 66.7%);opacity:.82}.radius-ring{position:absolute;border:1px solid rgba(255,223,0,.75);border-radius:50%;width:250px;height:250px;left:35%;top:27%;transform:translate(-50%,-50%);box-shadow:0 0 40px rgba(255,223,0,.08)}.radius-ring.r2{width:390px;height:390px;border-color:rgba(255,223,0,.38)}.scan-line{position:absolute;left:-35%;right:-35%;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,223,0,.95),transparent);box-shadow:0 0 22px rgba(255,223,0,.7);animation:scan 4.5s ease-in-out infinite;z-index:3}@keyframes scan{0%{top:8%;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:92%;opacity:0}}
+    .dash-pin{position:absolute;z-index:4;width:34px;height:34px;border-radius:50%;background:var(--savills-teal);border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:13px;box-shadow:0 12px 24px rgba(0,0,0,.36),0 0 0 5px rgba(35,130,145,.22);animation:pinPulse 2.8s ease-in-out infinite}.dash-pin.current{width:50px;height:42px;border-radius:13px;background:#42B8D4;font-size:9px;text-transform:uppercase;letter-spacing:.04em}.dash-pin.p1{left:44%;top:28%}.dash-pin.p2{left:50%;top:36%;animation-delay:.1s}.dash-pin.p3{left:55%;top:27%;animation-delay:.2s}.dash-pin.p4{left:39%;top:48%;animation-delay:.3s}.dash-pin.p5{left:62%;top:50%;animation-delay:.4s}.dash-pin.p6{left:43%;top:78%;animation-delay:.5s}.dash-pin.current{left:35%;top:60%;animation-delay:.25s}@keyframes pinPulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.05)}}.map-caption{position:absolute;left:18px;top:18px;z-index:4;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.72);border-radius:14px;padding:12px 14px;color:var(--savills-navy);box-shadow:0 14px 30px rgba(0,0,0,.2)}.map-caption b{display:block;font-size:13px}.map-caption span{display:block;margin-top:3px;color:#687083;font-size:11px}.map-legend{position:absolute;right:16px;bottom:16px;z-index:4;background:rgba(255,255,255,.94);border-radius:14px;border:1px solid rgba(255,255,255,.72);padding:10px 12px;color:#4b5563;font-size:11px;box-shadow:0 14px 30px rgba(0,0,0,.18)}
+    .dash-side{background:#f7f8fa;border-left:1px solid #d8dde7;padding:14px 12px;overflow:hidden}.side-heading{font-size:12px;font-weight:900;color:var(--savills-navy);margin:2px 0 10px}.option-card{background:#fff;border:1px solid #d9dde5;border-radius:15px;padding:10px 10px 11px;margin-bottom:10px;box-shadow:0 8px 22px rgba(20,24,36,.07);position:relative;overflow:hidden}.option-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--savills-teal)}.option-card .oc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.option-card b{font-size:12px;color:var(--savills-navy);line-height:1.2}.option-card .oc-score{background:var(--savills-yellow);color:#000;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:900}.option-card p{margin:7px 0 0;color:#687083;font-size:10.5px;line-height:1.35}.detail-glass{position:absolute;right:58px;top:458px;width:330px;border:1px solid rgba(255,255,255,.2);background:rgba(16,19,33,.72);backdrop-filter:blur(18px);border-radius:22px;padding:16px;color:#fff;box-shadow:0 28px 70px rgba(0,0,0,.34);z-index:5}.detail-glass small{display:block;text-transform:uppercase;letter-spacing:.13em;color:rgba(255,255,255,.54);font-size:10px;font-weight:900}.detail-glass h3{margin:7px 0 10px;font-size:21px;letter-spacing:-.03em}.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.detail-metric{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.11);border-radius:13px;padding:10px}.detail-metric b{display:block;font-size:15px;color:#fff}.detail-metric span{display:block;margin-top:2px;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.52);font-weight:900}
+    .floating-panel{position:absolute;left:-18px;bottom:28px;width:340px;background:#fff;color:var(--savills-navy);border-radius:22px;box-shadow:0 28px 80px rgba(0,0,0,.42);overflow:hidden;border:1px solid rgba(255,255,255,.7);z-index:6}.floating-head{padding:14px 16px;border-bottom:1px solid #e8ebf0;display:flex;justify-content:space-between;align-items:center}.floating-head b{font-size:12px;text-transform:uppercase;letter-spacing:.11em;color:#6b7280}.live-chip{font-size:10px;color:#000;background:var(--savills-yellow);border-radius:999px;padding:5px 8px;font-weight:900}.criteria-line{display:grid;grid-template-columns:94px 1fr 28px;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid #eef0f4;font-size:11px;font-weight:900}.criteria-line:last-child{border-bottom:none}.crit-track{height:7px;background:#e6e9ef;border-radius:999px;overflow:hidden}.crit-fill{height:100%;background:var(--savills-teal);border-radius:999px}.automation-strip{position:absolute;left:220px;top:86px;z-index:5;display:flex;gap:10px}.auto-step{background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.72);border-radius:999px;color:var(--savills-navy);padding:8px 11px;font-size:10px;font-weight:900;box-shadow:0 14px 30px rgba(0,0,0,.16);animation:autoGlow 3s ease-in-out infinite}.auto-step:nth-child(2){animation-delay:.4s}.auto-step:nth-child(3){animation-delay:.8s}@keyframes autoGlow{0%,100%{transform:translateY(0);box-shadow:0 14px 30px rgba(0,0,0,.16)}50%{transform:translateY(-4px);box-shadow:0 18px 36px rgba(255,223,0,.22)}}
+    @media(max-width:1320px){.landing-main{grid-template-columns:1fr}.landing-page{overflow:auto}.landing-shell{height:auto;min-height:100vh;overflow:visible}.intelligence-stage{min-height:660px}.dashboard-render{position:relative;right:auto;top:auto;width:100%;transform:none}.landing-hero h2{font-size:50px}.detail-glass{right:24px}.floating-panel{left:18px}.automation-strip{left:210px}}
+    @media(max-width:820px){.landing-shell{padding:20px}.landing-top{height:auto;align-items:flex-start;flex-direction:column}.landing-status{display:none}.landing-hero h2{font-size:38px}.landing-metrics,.landing-process{grid-template-columns:1fr}.intelligence-stage{min-height:760px}.dashboard-render{height:720px}.dash-body{grid-template-columns:1fr}.dash-rail,.dash-side{display:none}.detail-glass,.floating-panel,.automation-strip{position:relative;left:auto;right:auto;top:auto;bottom:auto;width:auto;margin:14px}.dash-frame{overflow:visible}.dash-center{position:absolute;inset:64px 0 0 0}.landing-page{overflow:auto}}
+    /* Lightweight client-side access gate for GitHub Pages */
+    .auth-gate{position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#25273A 0%,#171827 100%);display:flex;align-items:center;justify-content:center;padding:24px}
+    .auth-card{width:min(440px,100%);background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.36);overflow:hidden;border:1px solid rgba(255,255,255,.18)}
+    .auth-head{background:#25273A;color:#fff;padding:22px 24px;border-bottom:5px solid #FFDF00}
+    .auth-logo{width:124px;height:44px;background:#FFDF00;color:#000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;margin-bottom:14px}
+    .auth-title{font-size:22px;line-height:1.15;font-weight:900;margin:0}
+    .auth-subtitle{font-size:12px;letter-spacing:.09em;text-transform:uppercase;opacity:.78;margin-top:6px}
+    .auth-body{padding:22px 24px 24px}
+    .auth-body label{margin-top:12px;color:#4b5563}
+    .auth-body input{height:44px;font-size:15px}
+    .auth-error{display:none;margin-top:14px;padding:10px 12px;border-radius:10px;background:#fff1f0;border:1px solid #ffccc7;color:#a8071a;font-size:13px;font-weight:700}
+    .auth-body button{width:100%;height:44px;margin-top:18px;justify-content:center;background:#FFDF00;border-color:#FFDF00;color:#000;font-size:14px}
+    .auth-note{font-size:11px;color:#6b7280;line-height:1.4;margin-top:12px;text-align:center}
+    body.locked .app{filter:blur(8px);pointer-events:none;user-select:none}
+
   </style>
 </head>
-<body>
+<body class="locked landing-active">
+
+  <div id="authGate" class="auth-gate" aria-label="Password protected dashboard">
+    <div class="auth-card">
+      <div class="auth-head">
+        <div class="auth-logo">Savills</div>
+        <h2 class="auth-title">Industrial relocation scorecard</h2>
+        <div class="auth-subtitle">Private client presentation</div>
+      </div>
+      <div class="auth-body">
+        <label for="authUser">Username</label>
+        <input id="authUser" type="text" autocomplete="username" />
+        <label for="authPass">Password</label>
+        <input id="authPass" type="password" autocomplete="current-password" />
+        <button id="authButton" type="button">Enter dashboard</button>
+        <div id="authError" class="auth-error">Incorrect username or password.</div>
+        <div class="auth-note">Access is restricted for presentation review.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <section id="landingPage" class="landing-page" aria-label="Industrial relocation scorecard landing page">
+    <div class="landing-bg"></div>
+    <div class="aurora a1"></div><div class="aurora a2"></div><div class="aurora a3"></div>
+    <div class="landing-shell">
+      <div class="landing-top">
+        <div class="landing-brand">
+          <div class="landing-logo">Savills</div>
+          <div>
+            <div class="landing-kicker">Industrial advisory</div>
+            <div class="landing-titlebar">Relocation intelligence command center</div>
+          </div>
+        </div>
+        <div class="landing-status">
+          <div class="status-pill"><span class="status-dot"></span>Address-to-map automation</div>
+          <div class="status-pill">Weighted decisioning</div>
+          <div class="status-pill">Client-ready visualization</div>
+        </div>
+      </div>
+
+      <div class="landing-main">
+        <div class="landing-hero">
+          <div class="hero-eyebrow"><span></span>Industrial relocation intelligence</div>
+          <h2>Turn every building option into a <mark>live decision system</mark>.</h2>
+          <p class="hero-copy">A reusable market-intelligence style workspace for comparing relocation options across cost, labor, transportation, building specs, timing, landlord flexibility and qualitative business impact.</p>
+          <div class="hero-actions">
+            <button class="primary" onclick="loadDemo(); enterDashboard();">Launch Maersk case</button>
+            <button class="dark" onclick="startBlankFromLanding();">Start new client</button>
+            <label class="btn dark" for="landingImportJson">Import client file</label>
+            <input id="landingImportJson" class="hidden" type="file" accept="application/json" onchange="importJSON(event); enterDashboard();">
+          </div>
+          <div class="landing-metrics">
+            <div class="landing-metric"><div class="lm-label">Options mapped</div><div id="landingCount" class="lm-value">6</div><div class="lm-note">Excludes current location</div></div>
+            <div class="landing-metric"><div class="lm-label">Top score</div><div id="landingTop" class="lm-value">86</div><div class="lm-note">Weighted 100-point scale</div></div>
+            <div class="landing-metric"><div class="lm-label">Decision criteria</div><div id="landingCriteria" class="lm-value">9</div><div class="lm-note">Customizable by client</div></div>
+          </div>
+          <div class="landing-process">
+            <div class="process-card"><b>1. Add addresses</b><span>Geocode and map each current and alternative location.</span></div>
+            <div class="process-card"><b>2. Score priorities</b><span>Weight quantitative and qualitative factors by client.</span></div>
+            <div class="process-card"><b>3. Present leverage</b><span>Use the ranked map and table to guide the decision.</span></div>
+          </div>
+          <p class="hero-footnote">Built for live client meetings and repeat use across different tenants, markets and decision frameworks.</p>
+        </div>
+
+        <div class="intelligence-stage">
+          <div class="dashboard-render">
+            <div class="dash-frame">
+              <div class="dash-header">
+                <div class="dash-logo">Savills</div>
+                <div class="dash-title">Relocation scorecard engine</div>
+                <div class="dash-live">Live case view</div>
+              </div>
+              <div class="dash-body">
+                <div class="dash-rail">
+                  <div class="rail-tab active">Executive scorecard</div>
+                  <div class="rail-tab">Map intelligence</div>
+                  <div class="rail-tab">Building list</div>
+                  <div class="rail-tab">Comparison table</div>
+                  <div class="rail-note">Reusable HTML file. Export each client case and reload it later.</div>
+                </div>
+                <div class="dash-center">
+                  <div class="dash-kpis">
+                    <div class="dash-kpi"><small>Buildings added</small><strong>6</strong></div>
+                    <div class="dash-kpi"><small>Top score</small><strong>86</strong></div>
+                    <div class="dash-kpi"><small>Avg. score</small><strong>75</strong></div>
+                  </div>
+                  <div class="dash-map">
+                    <div class="scan-line"></div>
+                    <div class="radius-ring"></div><div class="radius-ring r2"></div>
+                    <div class="map-caption"><b>North Fort Worth options</b><span>Aerial map, county lines and current location context</span></div>
+                    <div class="dash-pin p1">1</div><div class="dash-pin p2">2</div><div class="dash-pin p3">3</div><div class="dash-pin p4">4</div><div class="dash-pin p5">5</div><div class="dash-pin p6">6</div><div class="dash-pin current">Maersk</div>
+                    <div class="map-legend">Current location plus ranked relocation options</div>
+                  </div>
+                </div>
+                <div class="dash-side">
+                  <div class="side-heading">Ranked building list</div>
+                  <div class="option-card"><div class="oc-top"><b>2501 Eagle Pkwy</b><span class="oc-score">86</span></div><p>243,040 SF | 40' clear | $8.82 all-in</p></div>
+                  <div class="option-card"><div class="oc-top"><b>16441 Victory Cir</b><span class="oc-score">79</span></div><p>163,500 SF | 32' clear | $10.88 all-in</p></div>
+                  <div class="option-card"><div class="oc-top"><b>5457 Sandshell Dr</b><span class="oc-score">76</span></div><p>219,396 SF | 32' clear | $10.27 all-in</p></div>
+                  <div class="option-card"><div class="oc-top"><b>3655 Mcpherson Dr</b><span class="oc-score">72</span></div><p>156,517 SF | 32' clear | $11.31 all-in</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="automation-strip">
+              <div class="auto-step">Geocode</div><div class="auto-step">Rank</div><div class="auto-step">Export</div>
+            </div>
+            <div class="floating-panel">
+              <div class="floating-head"><b>Criterion scoring</b><span class="live-chip">Automated</span></div>
+              <div class="criteria-line"><span>Cost</span><div class="crit-track"><div class="crit-fill" style="width:88%"></div></div><b>5</b></div>
+              <div class="criteria-line"><span>Specs</span><div class="crit-track"><div class="crit-fill" style="width:92%"></div></div><b>5</b></div>
+              <div class="criteria-line"><span>Timing</span><div class="crit-track"><div class="crit-fill" style="width:74%"></div></div><b>4</b></div>
+              <div class="criteria-line"><span>Risk</span><div class="crit-track"><div class="crit-fill" style="width:78%"></div></div><b>4</b></div>
+            </div>
+            <div class="detail-glass">
+              <small>Selected option</small>
+              <h3>2501 Eagle Pkwy</h3>
+              <div class="detail-grid">
+                <div class="detail-metric"><b>243k</b><span>SF</span></div>
+                <div class="detail-metric"><b>40'</b><span>Clear</span></div>
+                <div class="detail-metric"><b>$8.82</b><span>All-in</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
   <div class="app">
     <header>
       <div class="brand">
@@ -132,6 +304,7 @@
         </div>
       </div>
       <div class="header-actions">
+        <button class="ghost" onclick="showLanding()">Landing</button>
         <button class="ghost" onclick="loadDemo()">Load Maersk case</button>
         <button class="ghost" onclick="clearAll()">Reset</button>
         <button class="primary" onclick="downloadJSON()">Export client file</button>
@@ -321,7 +494,7 @@ function allInCost(b){if(b.rent===''||b.rent==null)return '-';return '$'+(Number
 function render(){
   localStorage.setItem('scoreCriteria', JSON.stringify(criteria));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(buildings));
-  renderMarkers();renderList();renderMetrics();renderInputs();renderCriteriaEditor();renderTable();renderChart();renderMarketStrip();
+  renderMarkers();renderList();renderMetrics();renderInputs();renderCriteriaEditor();renderTable();renderChart();renderMarketStrip();renderLandingStats();
 }
 function renderMetrics(){
   const optionScores=buildings.filter(b=>!isCurrent(b)).map(calculateScore).filter(s=>s!==null);
@@ -425,6 +598,27 @@ function renderChart(){
   document.getElementById('selectedNotes').innerHTML=`<strong>${b.name}</strong><br>${b.address||''}<br><br>${b.notes||'No notes entered.'}`;
 }
 function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav-pill').forEach(b=>b.classList.toggle('active',b.dataset.view===id));setTimeout(()=>{map.invalidateSize();map2.invalidateSize();fitMap();},220);}
+
+function enterDashboard(){
+  document.body.classList.remove('landing-active');
+  setTimeout(()=>{ if(map){map.invalidateSize();fitMap();} if(map2){map2.invalidateSize();} },180);
+}
+function showLanding(){
+  document.body.classList.add('landing-active');
+  renderLandingStats();
+}
+function startBlankFromLanding(){
+  criteria=[...defaultCriteria];buildings=[];selectedId=null;newBuildingForm();render();enterDashboard();switchView('add');
+}
+function renderLandingStats(){
+  const opts=buildings.filter(b=>!isCurrent(b));
+  const scores=opts.map(calculateScore).filter(v=>v!==null);
+  const top=scores.length?Math.max(...scores):'-';
+  const c=document.getElementById('landingCount'); if(c)c.textContent=opts.length||6;
+  const t=document.getElementById('landingTop'); if(t)t.textContent=top==='-'?86:top;
+  const cr=document.getElementById('landingCriteria'); if(cr)cr.textContent=criteria.length;
+}
+
 function downloadJSON(){const data={criteria,buildings,exportedAt:new Date().toISOString(),version:'1.7-clean-list-cards'};downloadBlob(JSON.stringify(data,null,2),'industrial_scorecard_client_file.json','application/json');}
 function importJSON(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{const data=JSON.parse(reader.result);criteria=data.criteria||criteria;buildings=data.buildings||[];selectedId=buildings[0]?.id||null;render();await geocodeAllMissing();fitMap();};reader.readAsText(file);}
 function downloadCSV(){
@@ -450,5 +644,38 @@ function loadDemo(){
 }
 window.onload=async()=>{initMaps();render();if(!buildings.length){loadDemo();}else{await geocodeAllMissing();fitMap();}}
 </script>
+
+  <script>
+    (function(){
+      const AUTH_USER = 'SavillsPhiladelphia';
+      const AUTH_PASS = 'IndustrialTakeover';
+      const AUTH_KEY = 'industrial_scorecard_auth_v1';
+      function unlock(){
+        document.body.classList.remove('locked');
+        const gate = document.getElementById('authGate');
+        if(gate) gate.style.display = 'none';
+        try{ sessionStorage.setItem(AUTH_KEY, '1'); }catch(e){}
+      }
+      function showError(){
+        const err = document.getElementById('authError');
+        if(err) err.style.display = 'block';
+      }
+      function submit(){
+        const user = (document.getElementById('authUser')?.value || '').trim();
+        const pass = document.getElementById('authPass')?.value || '';
+        if(user === AUTH_USER && pass === AUTH_PASS) unlock(); else showError();
+      }
+      window.addEventListener('DOMContentLoaded', function(){
+        try{ if(sessionStorage.getItem(AUTH_KEY) === '1'){ unlock(); return; } }catch(e){}
+        const btn = document.getElementById('authButton');
+        const pass = document.getElementById('authPass');
+        const user = document.getElementById('authUser');
+        if(btn) btn.addEventListener('click', submit);
+        [user, pass].forEach(el => el && el.addEventListener('keydown', function(e){ if(e.key === 'Enter') submit(); }));
+        if(user) user.focus();
+      });
+    })();
+  </script>
+
 </body>
 </html>
