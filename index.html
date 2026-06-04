@@ -716,6 +716,41 @@ const maerskMarketIntel = {
   submarket:'North Fort Worth', inventory:'136.1 msf', vacancy:'8.7%', asking:'$6.91/SF NNN', underConstruction:'9.2 msf',
   dfwInventory:'904.4 msf', dfwVacancy:'10.1%', dfwAsking:'$7.65/SF NNN', note:'Q3 2025 industrial market figures from the uploaded Strategic Real Estate Analysis.'
 };
+const barValueLabelsPlugin={
+  id:'barValueLabels',
+  afterDatasetsDraw(chart,args,pluginOptions){
+    if(chart.config.type!=='bar') return;
+    const opts=(chart.options.plugins&&chart.options.plugins.barValueLabels)||{};
+    if(opts.display===false) return;
+    const ds=chart.data.datasets?.[0];
+    const meta=chart.getDatasetMeta(0);
+    if(!ds||!meta||!meta.data||!meta.data.length) return;
+    const ctx=chart.ctx;
+    const indexAxis=chart.options.indexAxis||'x';
+    ctx.save();
+    ctx.font=opts.font||'700 11px Arial';
+    ctx.fillStyle=opts.color||'#ffffff';
+    ctx.strokeStyle=opts.strokeColor||'rgba(37,39,58,.35)';
+    ctx.lineWidth=opts.strokeWidth||3;
+    meta.data.forEach((bar,i)=>{
+      const raw=ds.data[i];
+      if(raw===undefined||raw===null||raw===''||Number.isNaN(Number(raw))) return;
+      const text=opts.formatter?opts.formatter(raw,i,chart):String(raw);
+      if(!text) return;
+      const pos=bar.tooltipPosition();
+      let x=pos.x, y=pos.y;
+      if(indexAxis==='y'){
+        x=pos.x+8; y=pos.y; ctx.textAlign='left'; ctx.textBaseline='middle';
+      }else{
+        x=pos.x; y=pos.y-10; ctx.textAlign='center'; ctx.textBaseline='bottom';
+      }
+      if(opts.stroke!==false) ctx.strokeText(text,x,y);
+      ctx.fillText(text,x,y);
+    });
+    ctx.restore();
+  }
+};
+if(window.Chart) Chart.register(barValueLabelsPlugin);
 function initMaps(){
   map = L.map('map',{zoomControl:true}).setView([32.98,-97.30],11);
   map2 = L.map('map2',{zoomControl:true}).setView([32.98,-97.30],11);
@@ -810,7 +845,7 @@ function renderExecutiveFinancialChart(rows){
       options:{
         responsive:true,
         maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        plugins:{legend:{display:false},tooltip:{enabled:false},barValueLabels:{display:false}},
         scales:{y:{display:false},x:{ticks:{display:false,color:'rgba(255,255,255,.65)'}}}
       }
     });
@@ -843,6 +878,7 @@ function renderExecutiveFinancialChart(rows){
       },
       plugins:{
         legend:{display:false},
+        barValueLabels:{formatter:(value)=>moneyCompact(value)},
         tooltip:{callbacks:{
           title:(items)=>{
             const row=rows[items[0].dataIndex];
@@ -1211,7 +1247,7 @@ function renderSimpleFinancialChart(canvasId, rows, field, label, tickFmt){
   window.finCharts[canvasId]=new Chart(ctx,{
     type:'bar',
     data:{labels:rows.map(r=>'#'+(r.b.optionNo||'•')),datasets:[{label, data:rows.map(r=>r[field]), backgroundColor:rows.map((r,i)=> i===0 ? '#FFDF00' : '#238291'), borderColor:rows.map((r,i)=> i===0 ? '#FFDF00' : '#238291'), borderRadius:8, maxBarThickness:46}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:(items)=>{const row=rows[items[0].dataIndex]; return `#${row.b.optionNo||'•'} ${row.b.name}`;},label:(c)=>`${label}: ${field==='avgAnnualPsf' ? '$'+Number(c.raw).toFixed(2) : money0(c.raw)}`}}},scales:{y:{ticks:{callback:tickFmt},grid:{color:'#edf0f4'}},x:{grid:{display:false}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},barValueLabels:{formatter:(value)=> field==='avgAnnualPsf' ? '$'+Number(value).toFixed(2) : moneyCompact(value), color:'#25273A', strokeColor:'rgba(255,255,255,.7)'},tooltip:{callbacks:{title:(items)=>{const row=rows[items[0].dataIndex]; return `#${row.b.optionNo||'•'} ${row.b.name}`;},label:(c)=>`${label}: ${field==='avgAnnualPsf' ? '$'+Number(c.raw).toFixed(2) : money0(c.raw)}`}}},scales:{y:{ticks:{callback:tickFmt},grid:{color:'#edf0f4'}},x:{grid:{display:false}}}}
   });
 }
 function money0(n){return '$'+Math.round(Number(n)||0).toLocaleString();}
@@ -1227,7 +1263,7 @@ function renderChart(){
   const ctx=document.getElementById('scoreChart');if(!ctx)return;let b=buildings.find(x=>x.id===selectedId);if(scoreChart)scoreChart.destroy();
   if(!b || isCurrent(b)) b=sortedBuildings().find(x=>!isCurrent(x));
   if(!b){document.getElementById('selectedNotes').innerHTML='Select a relocation option to view criterion-level scoring.';return;}
-  scoreChart=new Chart(ctx,{type:'bar',data:{labels:criteria.map(c=>c.label),datasets:[{label:b.name,data:criteria.map(c=>b.scores?.[c.key]||0),backgroundColor:'#238291',borderColor:'#238291'}]},options:{indexAxis:'y',scales:{x:{min:0,max:5,ticks:{stepSize:1}},y:{ticks:{font:{size:11}}}},plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false}});
+  scoreChart=new Chart(ctx,{type:'bar',data:{labels:criteria.map(c=>c.label),datasets:[{label:b.name,data:criteria.map(c=>b.scores?.[c.key]||0),backgroundColor:'#238291',borderColor:'#238291'}]},options:{indexAxis:'y',scales:{x:{min:0,max:5,ticks:{stepSize:1}},y:{ticks:{font:{size:11}}}},plugins:{legend:{display:false},barValueLabels:{formatter:(value)=>Number(value).toFixed(1).replace('.0',''), color:'#25273A', strokeColor:'rgba(255,255,255,.7)'}},responsive:true,maintainAspectRatio:false}});
   document.getElementById('selectedNotes').innerHTML=`<strong>${b.name}</strong><br>${b.address||''}<br><br>${b.notes||'No notes entered.'}`;
 }
 function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav-pill').forEach(b=>b.classList.toggle('active',b.dataset.view===id));setTimeout(()=>{map.invalidateSize();map2.invalidateSize();fitMap();},220);}
