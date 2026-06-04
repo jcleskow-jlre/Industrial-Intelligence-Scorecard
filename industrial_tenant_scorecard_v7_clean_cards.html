@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Industrial relocation scorecard</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --savills-yellow:#FFDF00;
+      --savills-navy:#25273A;
+      --savills-teal:#238291;
+      --ink:#1f2330;
+      --muted:#6b7280;
+      --line:#d9dde5;
+      --soft:#f5f6f8;
+      --white:#ffffff;
+      --danger:#b42318;
+      --good:#127c56;
+      --amber:#a06400;
+      --shadow:0 14px 35px rgba(20, 24, 36, .12);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#eef0f4;color:var(--ink);overflow:hidden}
+    html,body{height:100%}
+    .app{height:100vh;display:grid;grid-template-columns:280px 1fr;grid-template-rows:78px 1fr;overflow:hidden}
+    header{grid-column:1/3;background:var(--savills-navy);color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:5px solid var(--savills-yellow);min-height:78px;overflow:hidden}
+    .brand{display:flex;align-items:center;gap:18px}
+    .logo{width:124px;height:46px;background:var(--savills-yellow);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:23px;letter-spacing:.2px;flex:0 0 auto}
+    h1{font-size:22px;line-height:1.1;margin:0;font-weight:800;white-space:nowrap}
+    .subhead{font-size:12px;opacity:.82;margin-top:4px;text-transform:uppercase;letter-spacing:.12em}
+    .header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    button,.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;transition:.15s ease;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    button:hover,.btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+    button.primary{background:var(--savills-yellow);border-color:var(--savills-yellow);color:#000}
+    button.navy{background:var(--savills-navy);border-color:var(--savills-navy);color:#fff}
+    button.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.28)}
+    aside{background:#fff;border-right:1px solid var(--line);padding:16px;overflow:auto}
+    main{padding:18px;overflow:auto;height:100%}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+    .panel-header{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fbfbfc}
+    .panel-title{font-weight:800;font-size:15px;margin:0}
+    .panel-body{padding:16px}
+    .nav-pill{display:block;width:100%;text-align:left;border:none;border-radius:10px;background:#fff;padding:12px 12px;margin-bottom:8px;font-weight:700;color:var(--ink)}
+    .nav-pill.active{background:var(--savills-navy);color:#fff;border-left:5px solid var(--savills-yellow)}
+    .metric-grid{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:14px;margin-bottom:16px}
+    .metric{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 8px 20px rgba(20,24,36,.07)}
+    .metric .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+    .metric .value{font-size:28px;font-weight:800;margin-top:6px;color:var(--savills-navy)}
+    .metric .note{font-size:12px;color:var(--muted);margin-top:3px}
+    .workspace{display:grid;grid-template-columns:minmax(520px,1.2fr) minmax(420px,.8fr);gap:16px;align-items:start}
+    #map{height:560px;width:100%;background:#d9dde5;border-radius:0 0 16px 16px}
+    #map2{height:520px!important;width:100%;background:#d9dde5;border-radius:0 0 16px 16px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .form-grid.three{grid-template-columns:1fr 1fr 1fr}
+    label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800;margin-bottom:5px;display:block}
+    input,select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font:inherit;background:#fff;color:var(--ink)}
+    textarea{min-height:68px;resize:vertical}
+    .section-label{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--savills-navy);font-weight:900;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--savills-yellow)}
+    .criteria-row{display:grid;grid-template-columns:1fr 78px 110px;gap:10px;align-items:end;margin-bottom:10px}
+    .criteria-row input[type=number]{text-align:center}
+    .small{font-size:12px;color:var(--muted);line-height:1.4}
+    .building-list{display:flex;flex-direction:column;gap:12px;max-height:520px;overflow:auto;padding:0 8px 6px 0}
+    .building-card{border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px 20px;background:#fff;cursor:pointer;transition:.15s ease;position:relative;overflow:hidden;min-height:132px;display:flex;flex-direction:column;justify-content:flex-start}
+    .building-card:hover{border-color:var(--savills-teal);box-shadow:0 8px 20px rgba(35,130,145,.12)}
+    .building-card.active{border-color:var(--savills-navy);box-shadow:0 8px 24px rgba(37,39,58,.16)}
+    .building-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--savills-teal)}
+    .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-left:8px}
+    .card-title{font-weight:900;font-size:18px;line-height:1.2;color:var(--savills-navy);padding-right:8px;max-width:340px}
+    .score-badge{min-width:62px;text-align:center;border-radius:999px;background:var(--savills-yellow);color:#000;font-weight:900;padding:10px 13px;font-size:16px;line-height:1;height:max-content;flex:0 0 auto;margin-top:0}
+    .card-meta{margin:10px 0 0 8px;color:var(--muted);font-size:13px;line-height:1.45;padding-right:4px}
+    .card-address{font-size:13px;color:#4b5563;margin-bottom:3px;line-height:1.35;white-space:normal}
+    .card-stats{font-size:12px;color:#5f6b7c;line-height:1.4;white-space:normal}
+    .card-party{font-size:11px;color:#6b7280;line-height:1.35;margin-top:7px;padding-top:7px;border-top:1px solid #eef0f4;white-space:normal}
+    .tag-row{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 8px}
+    .tag{font-size:11px;padding:5px 8px;border-radius:999px;background:#f0f2f5;border:1px solid #e1e5eb;color:#3f4656;font-weight:700;white-space:nowrap}
+    .score-good{color:var(--good)}.score-mid{color:var(--amber)}.score-low{color:var(--danger)}
+    table{width:100%;min-width:2050px;border-collapse:collapse;font-size:11px;background:#fff;table-layout:fixed}
+    th,td{border-bottom:1px solid var(--line);padding:8px 9px;text-align:left;vertical-align:top;line-height:1.25}
+    td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        th:nth-child(1),td:nth-child(1){width:48px}
+    th:nth-child(2),td:nth-child(2){width:90px}
+    th:nth-child(3),td:nth-child(3){width:150px}
+    th:nth-child(4),td:nth-child(4){width:220px}
+    th:nth-child(5),td:nth-child(5){width:64px}
+    th:nth-child(6),td:nth-child(6){width:90px}
+    th{background:var(--savills-navy);color:#fff;position:sticky;top:0;z-index:2;font-size:10px;text-transform:uppercase;letter-spacing:.035em}
+    tbody tr:hover{background:#fbfaf0}
+    .table-wrap{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .scorebar{height:9px;background:#e7e9ee;border-radius:999px;overflow:hidden;margin-top:3px}.scorebar span{display:block;height:100%;background:var(--savills-teal);width:0%}
+    .view{display:none}.view.active{display:block}
+    .map-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .legend{position:absolute;bottom:22px;right:16px;z-index:500;background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 10px 24px rgba(0,0,0,.18);font-size:12px;line-height:1.5;border:1px solid var(--line)}
+    .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;background:var(--savills-teal);border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);vertical-align:-1px}
+    .relative{position:relative}
+    .leaflet-popup-content{font-family:Arial,Helvetica,sans-serif;min-width:210px}.popup-title{font-weight:900;color:var(--savills-navy);font-size:14px}.popup-score{font-weight:900;background:var(--savills-yellow);display:inline-block;border-radius:999px;padding:4px 8px;color:#000;margin:6px 0}.popup-meta{color:#4b5563;font-size:12px;line-height:1.35}.popup-link{margin-top:8px}
+    .notes{background:#fff8cc;border:1px solid #e7cb00;padding:10px 12px;border-radius:12px;color:#383200;font-size:12px;line-height:1.45;margin-bottom:12px}
+    .client-title{font-size:18px;font-weight:900;color:var(--savills-navy)}
+    .rank-number{font-size:13px;color:var(--muted);font-weight:800;margin-right:3px}
+    .hidden{display:none!important}
+    .danger{color:var(--danger);font-weight:800}.success{color:var(--good);font-weight:800}
+
+    .building-card.current::before{background:#42B8D4}
+    .current-badge{min-width:90px;text-align:center;border-radius:999px;background:#42B8D4;color:#fff;font-weight:900;padding:10px 13px;font-size:12px;line-height:1;height:max-content;text-transform:uppercase;letter-spacing:.04em;flex:0 0 auto;margin-top:0}
+    .maersk-marker{width:42px;height:42px;border-radius:10px;background:#42B8D4;border:3px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.35),0 10px 22px rgba(0,0,0,.32);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:10px;letter-spacing:.04em;position:relative}.maersk-marker:before{content:'✦';position:absolute;top:2px;left:5px;font-size:12px;color:#fff}.maersk-marker span{margin-top:9px}
+    .market-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}.mini-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 8px 20px rgba(20,24,36,.07)}.mini-card .mini-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}.mini-card .mini-value{font-size:24px;font-weight:900;color:var(--savills-navy);margin-top:4px}.mini-card .mini-note{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35}
+    .source-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.35}
+
+    .add-workspace{grid-template-columns:minmax(620px,1.05fr) minmax(430px,.95fr)}
+    .field-card{background:#fbfbfc;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+    .right-panel-sticky{position:sticky;top:0}
+    .compact-help{font-size:11px;color:var(--muted);line-height:1.35;margin:8px 0 0}
+    .table-caption{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+    .pill-note{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;color:var(--muted);background:#fff}
+    .presentation-grid{grid-template-columns:minmax(520px,.95fr) minmax(520px,1.05fr)}
+    .chart-panel canvas{height:340px!important}
+    @media(max-width:1300px){.metric-grid{grid-template-columns:repeat(2,1fr)}.workspace,.add-workspace,.presentation-grid{grid-template-columns:1fr}.right-panel-sticky{position:static}}
+    @media(max-width:1100px){.app{grid-template-columns:1fr}.app header,.app aside,.app main{grid-column:1}aside{border-right:none;border-bottom:1px solid var(--line);display:flex;gap:8px;overflow:auto}.nav-pill{min-width:170px}.metric-grid,.workspace{grid-template-columns:1fr}.header-actions{justify-content:flex-start}.form-grid,.form-grid.three{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">Savills</div>
+        <div>
+          <h1>Industrial relocation scorecard</h1>
+          <div class="subhead">Building comparison, weighted decisioning and map visualization</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="ghost" onclick="loadDemo()">Load Maersk case</button>
+        <button class="ghost" onclick="clearAll()">Reset</button>
+        <button class="primary" onclick="downloadJSON()">Export client file</button>
+        <label class="btn" for="importJson">Import client file</label>
+        <input id="importJson" class="hidden" type="file" accept="application/json" onchange="importJSON(event)">
+      </div>
+    </header>
+
+    <aside>
+      <button class="nav-pill active" data-view="overview" onclick="switchView('overview')">Executive scorecard</button>
+      <button class="nav-pill" data-view="add" onclick="switchView('add')">Add building</button>
+      <button class="nav-pill" data-view="criteria" onclick="switchView('criteria')">Criteria and weights</button>
+      <button class="nav-pill" data-view="table" onclick="switchView('table')">Comparison table</button>
+      <button class="nav-pill" data-view="presentation" onclick="switchView('presentation')">Presentation notes</button>
+      <div class="notes" style="margin-top:12px">
+        Best-use format: one reusable HTML file. Use it live in meetings, save each client as a JSON export, then re-import for future revisions.
+      </div>
+    </aside>
+
+    <main>
+      <div class="metric-grid">
+        <div class="metric"><div class="label">Buildings added</div><div id="metricCount" class="value">0</div><div class="note">Options currently under review</div></div>
+        <div class="metric"><div class="label">Top score</div><div id="metricTop" class="value">-</div><div class="note">Weighted 100-point scale</div></div>
+        <div class="metric"><div class="label">Avg. score</div><div id="metricAvg" class="value">-</div><div class="note">Across active building list</div></div>
+        <div class="metric"><div class="label">Selected building</div><div id="metricSelected" class="value" style="font-size:18px;line-height:1.2">None</div><div class="note">Click a dot or list card</div></div>
+      </div>
+
+      <section id="overview" class="view active">
+        <div class="workspace">
+          <div class="panel relative">
+            <div class="panel-header">
+              <div><p class="panel-title">Map view</p><div class="small">Aerial basemap with state and county lines. 400 Intermodal is shown as the current Maersk location; relocation options are numbered dots.</div></div>
+              <div class="map-tools"><button onclick="fitMap()">Fit to buildings</button><button onclick="toggleBoundaries()">Toggle boundaries</button></div>
+            </div>
+            <div id="map"></div>
+            <div class="legend"><span class="dot"></span>Building option<br><span style="display:inline-block;width:18px;height:3px;background:#FFDF00;margin-right:5px;vertical-align:middle"></span>State/county reference lines</div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><p class="panel-title">Ranked building list</p><button onclick="switchView('add')">Add option</button></div>
+            <div class="panel-body">
+              <div id="buildingList" class="building-list"></div>
+            </div>
+          </div>
+        </div>
+        <div id="marketStrip" class="market-strip"></div>
+      </section>
+
+      <section id="add" class="view">
+        <div class="workspace add-workspace">
+          <div class="panel">
+            <div class="panel-header"><p class="panel-title">Add or update building</p><button class="navy" onclick="saveBuilding()">Save building</button></div>
+            <div class="panel-body">
+              <input type="hidden" id="editId">
+              <div class="form-grid">
+                <div><label>Building name</label><input id="bName" placeholder="Example: 300 Ridge Road"></div>
+                <div><label>Address</label><input id="bAddress" placeholder="Street, city, state"></div>
+              </div>
+              <div class="form-grid three" style="margin-top:10px">
+                <div><label>Size needed or available SF</label><input id="bSize" type="number" placeholder="250000"></div>
+                <div><label>Clear height</label><input id="bClear" type="number" placeholder="36"></div>
+                <div><label>Asking rent</label><input id="bRent" type="number" step="0.01" placeholder="12.50"></div>
+              </div>
+              <div class="form-grid three" style="margin-top:10px">
+                <div><label>Docks</label><input id="bDocks" type="number" placeholder="40"></div>
+                <div><label>Office SF</label><input id="bOffice" type="number" placeholder="12000"></div>
+                <div><label>Timing</label><input id="bTiming" placeholder="Q1 2027"></div>
+              </div>
+              <div class="form-grid three" style="margin-top:10px">
+                <div><label>Latitude</label><input id="bLat" type="number" step="any" placeholder="Auto or manual"></div>
+                <div><label>Longitude</label><input id="bLng" type="number" step="any" placeholder="Auto or manual"></div>
+                <div style="display:flex;align-items:end"><button style="width:100%" onclick="geocodeFormAddress()">Find coordinates</button></div>
+              </div>
+              <div style="margin-top:10px"><label>Notes / qualitative comments</label><textarea id="bNotes" placeholder="Operational pros/cons, landlord posture, labor considerations, expansion potential, image quality, risk items."></textarea></div>
+              <div class="section-label">Score inputs, 1 to 5</div>
+              <div id="scoreInputs"></div>
+              <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="navy" onclick="saveBuilding()">Save building</button><button onclick="newBuildingForm()">New blank form</button><button onclick="deleteCurrentBuilding()">Delete selected</button></div>
+              <p class="small" style="margin-top:12px">Address geocoding now runs automatically when a building is saved. It uses ArcGIS first, then OpenStreetMap as fallback. For confidential or offline work, paste latitude and longitude manually from Google Maps or CoStar.</p><p id="geoStatus" class="small" style="margin-top:8px;font-weight:800;color:#25273A"></p>
+            </div>
+          </div>
+          <div class="panel relative right-panel-sticky">
+            <div class="panel-header"><div><p class="panel-title">Map preview</p><div class="small">Use this to verify the selected building and option markers before presenting.</div></div><button onclick="fitMap()">Fit map</button></div>
+            <div id="map2"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="criteria" class="view">
+        <div class="panel">
+          <div class="panel-header"><p class="panel-title">Criteria and weights</p><button class="navy" onclick="saveCriteria()">Save weights</button></div>
+          <div class="panel-body">
+            <div class="notes">Customize the criteria per client. The scorecard works best with 8 to 12 factors, split between financial, operational, location and qualitative decision criteria. Weights should total 100, but the model will normalize automatically if they do not.</div>
+            <div id="criteriaEditor"></div>
+            <button onclick="addCriterion()">Add criterion</button>
+            <button class="navy" onclick="saveCriteria()">Save weights</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="table" class="view">
+        <div class="panel">
+          <div class="panel-header"><p class="panel-title">Detailed comparison table</p><button onclick="downloadCSV()">Export CSV</button></div>
+          <div class="panel-body"><div class="table-caption"><span class="pill-note">Ranked relocation options only; current location is shown for context</span><span class="small">Scroll horizontally for full score detail.</span></div><div class="table-wrap"><table id="comparisonTable"></table></div></div>
+        </div>
+      </section>
+
+      <section id="presentation" class="view">
+        <div class="workspace presentation-grid">
+          <div class="panel">
+            <div class="panel-header"><p class="panel-title">Client-facing decision framework</p></div>
+            <div class="panel-body">
+              <div class="client-title">Recommended presentation use</div>
+              <p>This scorecard is designed to show that the relocation process is disciplined, not subjective. It helps a tenant compare competing buildings across total cost, operational fit, labor, transportation access, timing, landlord flexibility, expansion potential and qualitative business impact.</p>
+              <p>Recommended workflow:</p>
+              <ol>
+                <li>Customize criteria and weights for the client’s business priorities.</li>
+                <li>Add each building with address, core specs and 1 to 5 ratings.</li>
+                <li>Use the map to show realistic relocation geography and market coverage.</li>
+                <li>Use the ranked list to guide discussion, not to imply the highest score is automatically the final decision.</li>
+                <li>Export the client file as JSON so the same presentation can be reused and updated later.</li>
+              </ol>
+              <p><strong>Best format:</strong> reusable HTML dashboard, supported by optional static PowerPoint screenshots or exported tables for final client reporting.</p>
+            </div>
+          </div>
+          <div class="panel chart-panel">
+            <div class="panel-header"><p class="panel-title">Selected relocation option scoring</p></div>
+            <div class="panel-body"><canvas id="scoreChart" height="260"></canvas><div id="selectedNotes" class="small" style="margin-top:12px"></div></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const defaultCriteria = [
+  {key:'total_cost', label:'Total occupancy cost', weight:20, type:'quantitative'},
+  {key:'operational_fit', label:'Operational / size fit', weight:17, type:'qualitative'},
+  {key:'labor_access', label:'Labor access', weight:10, type:'quantitative'},
+  {key:'transportation', label:'Transportation access', weight:12, type:'quantitative'},
+  {key:'building_quality', label:'Building quality / specs', weight:12, type:'qualitative'},
+  {key:'timing', label:'Timing / availability', weight:8, type:'quantitative'},
+  {key:'expansion', label:'Expansion flexibility', weight:7, type:'qualitative'},
+  {key:'landlord', label:'Landlord flexibility', weight:7, type:'qualitative'},
+  {key:'risk', label:'Execution risk', weight:7, type:'qualitative'}
+];
+let criteria = JSON.parse(localStorage.getItem('scoreCriteria') || 'null') || defaultCriteria;
+const STORAGE_KEY='scoreBuildings_v7_clean_list_cards';
+let buildings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let selectedId = buildings[0]?.id || null;
+let map, map2, boundaryLayer, boundaryLayer2, markers=[], markers2=[], scoreChart;
+const stateCountyUrl = 'https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json';
+const topoJsonUrl = 'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js';
+const maerskMarketIntel = {
+  submarket:'North Fort Worth', inventory:'136.1 msf', vacancy:'8.7%', asking:'$6.91/SF NNN', underConstruction:'9.2 msf',
+  dfwInventory:'904.4 msf', dfwVacancy:'10.1%', dfwAsking:'$7.65/SF NNN', note:'Q3 2025 industrial market figures from the uploaded Strategic Real Estate Analysis.'
+};
+function initMaps(){
+  map = L.map('map',{zoomControl:true}).setView([32.98,-97.30],11);
+  map2 = L.map('map2',{zoomControl:true}).setView([32.98,-97.30],11);
+  const esri='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+  const labels='https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+  [map,map2].forEach(m=>{L.tileLayer(esri,{maxZoom:19, attribution:'Tiles &copy; Esri'}).addTo(m);L.tileLayer(labels,{maxZoom:19, attribution:'Labels &copy; Esri'}).addTo(m);});
+  loadBoundaries();
+}
+function loadBoundaries(){
+  if(!window.topojson){const s=document.createElement('script');s.src=topoJsonUrl;s.onload=loadBoundaries;document.head.appendChild(s);return;}
+  fetch(stateCountyUrl).then(r=>r.json()).then(us=>{
+    const counties=topojson.feature(us, us.objects.counties);
+    const style={color:'#FFDF00',weight:.7,opacity:.65,fillOpacity:0};
+    boundaryLayer=L.geoJSON(counties,{style}).addTo(map);
+    boundaryLayer2=L.geoJSON(counties,{style}).addTo(map2);
+  }).catch(()=>console.log('Boundary layer not available'));
+}
+function toggleBoundaries(){[boundaryLayer,boundaryLayer2].forEach((layer,i)=>{const m=i===0?map:map2;if(!layer)return;m.hasLayer(layer)?m.removeLayer(layer):layer.addTo(m);});}
+function hasScores(b){return criteria.some(c=>Number(b.scores?.[c.key])>0)}
+function isCurrent(b){return b.status==='current'}
+function calculateScore(b){
+  if(isCurrent(b) || !hasScores(b)) return null;
+  const totalWeight = criteria.reduce((s,c)=>s+(Number(c.weight)||0),0)||1;
+  const score = criteria.reduce((s,c)=>s+((Number(b.scores?.[c.key])||0)/5)*(Number(c.weight)||0),0)/totalWeight*100;
+  return Math.round(score);
+}
+function displayScore(b){const s=calculateScore(b);return s===null?(isCurrent(b)?'Current':'N/A'):s;}
+function scoreClass(score){return score>=80?'score-good':score>=65?'score-mid':'score-low'}
+function cleanNumber(n){if(n===undefined||n===null||n==='')return '-';return Number(n).toLocaleString();}
+function currency(n){if(n===undefined||n===null||n==='')return '-';return '$'+Number(n).toFixed(2);}
+function allInCost(b){if(b.rent===''||b.rent==null)return '-';return '$'+(Number(b.rent)+(Number(b.opex)||0)).toFixed(2)}
+function render(){
+  localStorage.setItem('scoreCriteria', JSON.stringify(criteria));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(buildings));
+  renderMarkers();renderList();renderMetrics();renderInputs();renderCriteriaEditor();renderTable();renderChart();renderMarketStrip();
+}
+function renderMetrics(){
+  const optionScores=buildings.filter(b=>!isCurrent(b)).map(calculateScore).filter(s=>s!==null);
+  document.getElementById('metricCount').textContent=buildings.filter(b=>!isCurrent(b)).length;
+  document.getElementById('metricTop').textContent=optionScores.length?Math.max(...optionScores):'-';
+  document.getElementById('metricAvg').textContent=optionScores.length?Math.round(optionScores.reduce((a,b)=>a+b,0)/optionScores.length):'-';
+  const sel=buildings.find(b=>b.id===selectedId);document.getElementById('metricSelected').textContent=sel?sel.name:'None';
+}
+function maerskIcon(){return L.divIcon({className:'',html:`<div class="maersk-marker"><span>MAERSK</span></div>`,iconSize:[42,42],iconAnchor:[21,21]});}
+function markerIcon(b){
+  if(isCurrent(b)) return maerskIcon();
+  const score=calculateScore(b);
+  const label = b.optionNo || (score===null?'•':score);
+  return L.divIcon({className:'',html:`<div style="width:32px;height:32px;border-radius:50%;background:#238291;border:3px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.35),0 8px 18px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:12px">${label}</div>`,iconSize:[32,32],iconAnchor:[16,16]});
+}
+function renderMarkers(){
+  markers.forEach(m=>map.removeLayer(m));markers2.forEach(m=>map2.removeLayer(m));markers=[];markers2=[];
+  buildings.forEach(b=>{
+    if(!Number(b.lat)||!Number(b.lng))return;const score=displayScore(b);const popup=`<div class="popup-title">${b.name}</div><div class="popup-score">${score}</div><div class="popup-meta">${b.address||''}<br>${cleanNumber(b.size)} SF | ${b.clear||'-'}' clear | ${currency(b.rent)} ask | OpEx ${currency(b.opex)}<br>Landlord: ${b.landlord||'-'}<br>Listing agent: ${b.listingAgent||'-'}</div><div class="popup-link"><button onclick="selectBuilding('${b.id}')">View details</button></div>`;
+    const m=L.marker([b.lat,b.lng],{icon:markerIcon(b)}).addTo(map).bindPopup(popup);m.on('click',()=>selectBuilding(b.id));markers.push(m);
+    const m2=L.marker([b.lat,b.lng],{icon:markerIcon(b)}).addTo(map2).bindPopup(popup);m2.on('click',()=>selectBuilding(b.id));markers2.push(m2);
+  });
+}
+function fitMap(){const pts=buildings.filter(b=>Number(b.lat)&&Number(b.lng)).map(b=>[b.lat,b.lng]);if(!pts.length)return;const bounds=L.latLngBounds(pts);[map,map2].forEach(m=>m.fitBounds(bounds.pad(.22)));}
+function sortedBuildings(){return [...buildings].sort((a,b)=>{if(isCurrent(a))return -1;if(isCurrent(b))return 1;return (calculateScore(b)||0)-(calculateScore(a)||0);});}
+function renderList(){
+  const container=document.getElementById('buildingList');
+  if(!buildings.length){container.innerHTML='<div class="small">No buildings added yet. Add a building manually or load the Maersk case to see the format.</div>';return;}
+  let rank=0;
+  container.innerHTML=sortedBuildings().map((b)=>{const score=calculateScore(b);const current=isCurrent(b);if(!current)rank++;return `<div class="building-card ${b.id===selectedId?'active':''} ${current?'current':''}" onclick="selectBuilding('${b.id}')"><div class="card-top"><div class="card-title"><span class="rank-number">${current?'':rank+'.'}</span>${b.name}</div><div class="${current?'current-badge':'score-badge'}">${current?'Current':(score??'N/A')}</div></div><div class="card-meta"><div class="card-address">${b.address||''}</div><div class="card-stats">${cleanNumber(b.size)} SF | ${b.clear||'-'}' clear | ${currency(b.rent)} ask | OpEx ${currency(b.opex)} | All-in ${allInCost(b)}</div><div class="card-party">Landlord: ${b.landlord||'-'} | Agent: ${b.listingAgent||'-'}${current?' | Current location':''}</div></div></div>`}).join('');
+}
+function renderMarketStrip(){
+  const el=document.getElementById('marketStrip'); if(!el) return;
+  if(!buildings.some(b=>b.caseName==='Maersk Fort Worth')){el.innerHTML='';return;}
+  el.innerHTML=`<div class="mini-card"><div class="mini-label">Submarket</div><div class="mini-value">${maerskMarketIntel.submarket}</div><div class="mini-note">Current location and all six options are in/near the North Fort Worth competitive set.</div></div><div class="mini-card"><div class="mini-label">North Fort Worth vacancy</div><div class="mini-value">${maerskMarketIntel.vacancy}</div><div class="mini-note">Inventory ${maerskMarketIntel.inventory}; asking rent ${maerskMarketIntel.asking}.</div></div><div class="mini-card"><div class="mini-label">Construction pressure</div><div class="mini-value">${maerskMarketIntel.underConstruction}</div><div class="mini-note">Under construction, up materially from the prior year in the source report.</div></div><div class="mini-card"><div class="mini-label">DFW market</div><div class="mini-value">${maerskMarketIntel.dfwVacancy}</div><div class="mini-note">DFW vacancy; market asking rent ${maerskMarketIntel.dfwAsking}.<div class="source-note">Source: uploaded Maersk / Performance Team analysis.</div></div></div>`;
+}
+function selectBuilding(id){selectedId=id;const b=buildings.find(x=>x.id===id);if(b&&Number(b.lat)&&Number(b.lng)){map.setView([b.lat,b.lng], Math.max(map.getZoom(), 12));map2.setView([b.lat,b.lng], Math.max(map2.getZoom(), 12));}populateForm(b);render();}
+function renderInputs(){
+  const box=document.getElementById('scoreInputs');if(!box)return;const b=buildings.find(x=>x.id===selectedId)||{};
+  box.innerHTML=criteria.map(c=>`<div class="criteria-row"><div><label>${c.label}</label><div class="small">${c.type} | weight ${c.weight}</div></div><select data-score-key="${c.key}"><option value="">Select</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${(b.scores?.[c.key]==n)?'selected':''}>${n}</option>`).join('')}</select><div><label>Score</label><div class="scorebar"><span style="width:${((b.scores?.[c.key]||0)/5)*100}%"></span></div></div></div>`).join('');
+}
+function renderCriteriaEditor(){
+  const box=document.getElementById('criteriaEditor');if(!box)return;
+  box.innerHTML=criteria.map((c,i)=>`<div class="criteria-row" style="grid-template-columns:1.2fr .5fr .5fr 80px"><div><label>Criterion</label><input data-crit-index="${i}" data-crit-field="label" value="${c.label}"></div><div><label>Weight</label><input type="number" data-crit-index="${i}" data-crit-field="weight" value="${c.weight}"></div><div><label>Type</label><select data-crit-index="${i}" data-crit-field="type"><option value="quantitative" ${c.type==='quantitative'?'selected':''}>Quant.</option><option value="qualitative" ${c.type==='qualitative'?'selected':''}>Qual.</option></select></div><button onclick="removeCriterion(${i})">Remove</button></div>`).join('');
+}
+function saveCriteria(){
+  document.querySelectorAll('[data-crit-index]').forEach(el=>{const i=Number(el.dataset.critIndex);const field=el.dataset.critField;criteria[i][field]=field==='weight'?Number(el.value)||0:el.value;});
+  criteria=criteria.map((c,i)=>({...c,key:c.key||slug(c.label||('criterion_'+i))}));render();
+}
+function addCriterion(){criteria.push({key:'criterion_'+Date.now(), label:'New criterion', weight:5, type:'qualitative'});renderCriteriaEditor();}
+function removeCriterion(i){criteria.splice(i,1);render();}
+function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')+'_'+Date.now();}
+function formBuilding(){
+  const id=document.getElementById('editId').value || 'b_'+Date.now();const scores={};document.querySelectorAll('[data-score-key]').forEach(el=>{if(el.value)scores[el.dataset.scoreKey]=Number(el.value)});
+  const existing=buildings.find(b=>b.id===id)||{};
+  return {...existing,id,name:document.getElementById('bName').value||document.getElementById('bAddress').value||'Unnamed building',address:document.getElementById('bAddress').value,size:val('bSize'),clear:val('bClear'),rent:val('bRent'),docks:val('bDocks'),office:val('bOffice'),timing:document.getElementById('bTiming').value,lat:Number(document.getElementById('bLat').value)||null,lng:Number(document.getElementById('bLng').value)||null,notes:document.getElementById('bNotes').value,scores};
+}
+function val(id){const v=document.getElementById(id).value;return v===''?'':Number(v);}
+function setGeoStatus(msg){const el=document.getElementById('geoStatus');if(el)el.textContent=msg||'';}
+async function saveBuilding(){
+  const b=formBuilding();
+  if((!Number(b.lat)||!Number(b.lng)) && b.address){
+    setGeoStatus('Finding coordinates for '+b.address+'...');
+    const pt=await geocodeAddress(b.address);
+    if(pt){b.lat=pt.lat;b.lng=pt.lng;document.getElementById('bLat').value=pt.lat.toFixed(6);document.getElementById('bLng').value=pt.lng.toFixed(6);setGeoStatus('Mapped successfully.');}
+    else{setGeoStatus('Could not map this address automatically. Paste latitude and longitude manually, then save again.');}
+  }
+  const idx=buildings.findIndex(x=>x.id===b.id);if(idx>=0)buildings[idx]=b;else buildings.push(b);selectedId=b.id;render();switchView('overview');fitMap();
+}
+function populateForm(b){
+  if(!b)return;document.getElementById('editId').value=b.id;document.getElementById('bName').value=b.name||'';document.getElementById('bAddress').value=b.address||'';document.getElementById('bSize').value=b.size||'';document.getElementById('bClear').value=b.clear||'';document.getElementById('bRent').value=b.rent||'';document.getElementById('bDocks').value=b.docks||'';document.getElementById('bOffice').value=b.office||'';document.getElementById('bTiming').value=b.timing||'';document.getElementById('bLat').value=b.lat||'';document.getElementById('bLng').value=b.lng||'';document.getElementById('bNotes').value=b.notes||'';
+}
+function newBuildingForm(){['editId','bName','bAddress','bSize','bClear','bRent','bDocks','bOffice','bTiming','bLat','bLng','bNotes'].forEach(id=>document.getElementById(id).value='');renderInputs();}
+function deleteCurrentBuilding(){if(!selectedId)return;buildings=buildings.filter(b=>b.id!==selectedId);selectedId=buildings[0]?.id||null;newBuildingForm();render();}
+async function geocodeAddress(q){
+  const arc='https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&maxLocations=1&outFields=Match_addr&SingleLine='+encodeURIComponent(q);
+  try{const res=await fetch(arc);const data=await res.json();if(data.candidates && data.candidates.length && data.candidates[0].location){return {lat:Number(data.candidates[0].location.y),lng:Number(data.candidates[0].location.x),source:'ArcGIS'};}}catch(e){}
+  const nom='https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q);
+  try{const res=await fetch(nom,{headers:{'Accept':'application/json'}});const data=await res.json();if(data.length){return {lat:Number(data[0].lat),lng:Number(data[0].lon),source:'OpenStreetMap'};}}catch(e){}
+  return null;
+}
+async function geocodeFormAddress(){
+  const q=document.getElementById('bAddress').value;if(!q){alert('Enter an address first.');return;}
+  setGeoStatus('Finding coordinates...');
+  const pt=await geocodeAddress(q);
+  if(!pt){setGeoStatus('No location found. Paste lat/long manually.');alert('No location found. Paste lat/long manually.');return;}
+  document.getElementById('bLat').value=pt.lat.toFixed(6);document.getElementById('bLng').value=pt.lng.toFixed(6);setGeoStatus('Coordinates found. Click Save / update building to place it on the map.');
+}
+async function geocodeAllMissing(){let changed=false;for(const b of buildings){if((!Number(b.lat)||!Number(b.lng)) && b.address){const pt=await geocodeAddress(b.address);if(pt){b.lat=pt.lat;b.lng=pt.lng;changed=true;}}}if(changed){render();fitMap();}}
+function renderTable(){
+  const table=document.getElementById('comparisonTable');if(!table)return;
+  const headers=['Rank','Status','Building','Address','Score','RBA / SF','Year built','Clear','OpEx','Asking rent','All-in cost','Landlord','Listing agent',...criteria.map(c=>c.label)];
+  let rank=0;
+  table.innerHTML='<thead><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>'+sortedBuildings().map((b)=>{const current=isCurrent(b); if(!current)rank++; return `<tr onclick="selectBuilding('${b.id}')"><td>${current?'-':rank}</td><td>${current?'Current':'Relocation option'}</td><td><strong>${b.name}</strong></td><td>${b.address||'-'}</td><td><strong>${displayScore(b)}</strong></td><td>${cleanNumber(b.size)}</td><td>${b.yearBuilt||'-'}</td><td>${b.clear||'-'}</td><td>${currency(b.opex)}</td><td>${currency(b.rent)}</td><td>${allInCost(b)}</td><td>${b.landlord||'-'}</td><td>${b.listingAgent||'-'}</td>${criteria.map(c=>`<td>${b.scores?.[c.key]||'-'}</td>`).join('')}</tr>`}).join('')+'</tbody>';
+}
+function renderChart(){
+  const ctx=document.getElementById('scoreChart');if(!ctx)return;let b=buildings.find(x=>x.id===selectedId);if(scoreChart)scoreChart.destroy();
+  if(!b || isCurrent(b)) b=sortedBuildings().find(x=>!isCurrent(x));
+  if(!b){document.getElementById('selectedNotes').innerHTML='Select a relocation option to view criterion-level scoring.';return;}
+  scoreChart=new Chart(ctx,{type:'bar',data:{labels:criteria.map(c=>c.label),datasets:[{label:b.name,data:criteria.map(c=>b.scores?.[c.key]||0),backgroundColor:'#238291',borderColor:'#238291'}]},options:{indexAxis:'y',scales:{x:{min:0,max:5,ticks:{stepSize:1}},y:{ticks:{font:{size:11}}}},plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false}});
+  document.getElementById('selectedNotes').innerHTML=`<strong>${b.name}</strong><br>${b.address||''}<br><br>${b.notes||'No notes entered.'}`;
+}
+function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav-pill').forEach(b=>b.classList.toggle('active',b.dataset.view===id));setTimeout(()=>{map.invalidateSize();map2.invalidateSize();fitMap();},220);}
+function downloadJSON(){const data={criteria,buildings,exportedAt:new Date().toISOString(),version:'1.7-clean-list-cards'};downloadBlob(JSON.stringify(data,null,2),'industrial_scorecard_client_file.json','application/json');}
+function importJSON(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async()=>{const data=JSON.parse(reader.result);criteria=data.criteria||criteria;buildings=data.buildings||[];selectedId=buildings[0]?.id||null;render();await geocodeAllMissing();fitMap();};reader.readAsText(file);}
+function downloadCSV(){
+  let rank=0;const headers=['Rank','Status','Building','Address','Score','SF','Year built','Clear','OpEx','Asking rent','All-in cost','Landlord','Listing agent',...criteria.map(c=>c.label)];
+  const rows=sortedBuildings().map((b)=>{const current=isCurrent(b);if(!current)rank++;return [current?'':rank,current?'Current':'Relocation option',b.name,b.address,displayScore(b),b.size,b.yearBuilt,b.clear,b.opex,b.rent,allInCost(b),b.landlord,b.listingAgent,...criteria.map(c=>b.scores?.[c.key]||'')]});
+  const csv=[headers,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\n');downloadBlob(csv,'industrial_scorecard_comparison.csv','text/csv');
+}
+function downloadBlob(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function clearAll(){if(!confirm('Clear buildings and reset criteria?'))return;criteria=[...defaultCriteria];buildings=[];selectedId=null;newBuildingForm();render();}
+function loadDemo(){
+  criteria=[...defaultCriteria];
+  const caseName='Maersk Fort Worth';
+  buildings=[
+    {id:'current_400',caseName,status:'current',name:'400 Intermodal Pkwy',address:'400 Intermodal Pkwy, Fort Worth, TX',size:321717,clear:30,rent:4.92,opex:'',yearBuilt:1998,landlord:'Barings',listingAgent:'Hillwood',lat:32.9628,lng:-97.3079,notes:'Current Maersk / Performance Team location. Performance Team renewed 160,158 SF for 5 years and 3 months commencing March 1, 2022, expiring May 31, 2027. Source notes rent starting at approximately $4.25/SF with 3% escalations and expiring at approximately $4.92/SF. Building is now 100% leased after Wabtec leased the remaining vacancy.',scores:{}},
+    {id:'opt1',caseName,optionNo:1,name:'3655 Mcpherson Dr',address:'3655 Mcpherson Dr, Northlake, TX 76247',size:156517,clear:32,rent:9.50,opex:1.81,yearBuilt:2025,buildingType:'Warehouse with cross docks',landlord:'Alliance Industrial Company',listingAgent:'Stream Realty Partners, LP',lat:33.0445,lng:-97.2867,notes:'New 2025 building, 156,517 SF, 32-foot clear. Strong size fit relative to current 160,158 SF lease, but highest asking rent in the relocation set.',scores:{total_cost:2,operational_fit:5,labor_access:4,transportation:4,building_quality:5,timing:3,expansion:3,landlord:3,risk:3}},
+    {id:'opt2',caseName,optionNo:2,name:'16441 Victory Cir',address:'16441 Victory Cir, Fort Worth, TX 76177',size:163500,clear:32,rent:8.50,opex:2.38,yearBuilt:2025,buildingType:'Warehouse with cross docks',landlord:'Scannell Properties',listingAgent:'Stream Realty Partners, LP',lat:33.0142,lng:-97.2862,notes:'2025 building, 163,500 SF, 32-foot clear. Best pure size match among alternatives, though OpEx pushes all-in cost above several competing options.',scores:{total_cost:3,operational_fit:5,labor_access:4,transportation:4,building_quality:5,timing:3,expansion:3,landlord:4,risk:4}},
+    {id:'opt3',caseName,optionNo:3,name:'3532 Texas Hwy 114',address:'3532 Texas Hwy 114, Fort Worth, TX 76177',size:319348,clear:32,rent:8.50,opex:2.83,yearBuilt:2023,buildingType:'Warehouse with cross docks',landlord:'Greystar Real Estate Partners',listingAgent:'Stream Realty Partners, LP',lat:33.0244,lng:-97.2735,notes:'2023 building, 319,348 SF, 32-foot clear. Modern quality, but materially larger than current leased footprint unless business case supports expansion or partial occupancy.',scores:{total_cost:3,operational_fit:3,labor_access:4,transportation:4,building_quality:5,timing:3,expansion:5,landlord:3,risk:3}},
+    {id:'opt4',caseName,optionNo:4,name:'2501 Eagle Pkwy',address:'2501 Eagle Pkwy, Fort Worth, TX 76177',size:243040,clear:40,rent:6.75,opex:2.07,yearBuilt:2024,buildingType:'Warehouse with cross docks',landlord:'Property Reserve Inc',listingAgent:'CBRE',lat:32.9917,lng:-97.3049,notes:'2024 building, 243,040 SF, 40-foot clear. Lowest asking rent in the option set and strongest clear-height spec; key question is whether larger footprint is operationally useful or creates excess occupancy cost.',scores:{total_cost:5,operational_fit:4,labor_access:4,transportation:4,building_quality:5,timing:4,expansion:5,landlord:3,risk:4}},
+    {id:'opt5',caseName,optionNo:5,name:'899 Henrietta Creek Rd',address:'899 Henrietta Creek Rd, Roanoke, TX 76262',size:330000,clear:30,rent:8.75,opex:2.40,yearBuilt:2005,buildingType:'Warehouse with cross docks',landlord:'At Industrial Owner 5 Holdco LP',listingAgent:'KBC Advisors',lat:32.9889,lng:-97.2449,notes:'2005 building, 330,000 SF, 30-foot clear. Large block with comparable clear height to current building, but older vintage and larger footprint reduce relative fit.',scores:{total_cost:3,operational_fit:3,labor_access:4,transportation:3,building_quality:3,timing:4,expansion:5,landlord:3,risk:3}},
+    {id:'opt6',caseName,optionNo:6,name:'5457 Sandshell Dr',address:'5457 Sandshell Dr, Fort Worth, TX 76137',size:219396,clear:32,rent:7.95,opex:2.32,yearBuilt:2018,buildingType:'Warehouse with cross docks',landlord:'DWS Group',listingAgent:'Stream Realty Partners, LP',lat:32.8464,lng:-97.3069,notes:'2018 building, 219,396 SF, 32-foot clear. Competitive asking rent relative to newer options and a manageable step-up in size, though farther south than most other alternatives.',scores:{total_cost:4,operational_fit:4,labor_access:4,transportation:3,building_quality:4,timing:4,expansion:4,landlord:3,risk:4}}
+  ];
+  selectedId='current_400';populateForm(buildings[0]);render();fitMap();
+}
+window.onload=async()=>{initMaps();render();if(!buildings.length){loadDemo();}else{await geocodeAllMissing();fitMap();}}
+</script>
+</body>
+</html>
