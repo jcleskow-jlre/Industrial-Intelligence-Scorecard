@@ -459,9 +459,6 @@
       <button class="nav-pill" data-view="matrix" onclick="switchView('matrix')">Qualitative matrix</button>
       <button class="nav-pill" data-view="financial" onclick="switchView('financial')">Financial analysis</button>
       <button class="nav-pill" data-view="presentation" onclick="switchView('presentation')">Presentation notes</button>
-      <div class="notes" style="margin-top:12px">
-        Best-use format: one reusable HTML file. Use it live in meetings, save each client as a JSON export, then re-import for future revisions.
-      </div>
     </aside>
 
     <main>
@@ -479,7 +476,7 @@
               <div>
                 <div class="exec-eyebrow">Apples-to-apples financial summary</div>
                 <h2 class="exec-fin-title">Normalized cost comparison across the same analysis horizon</h2>
-                <p id="execFinancialNarrative" class="exec-fin-copy">Load options and update the financial analysis to show the lowest-cost alternative, net effective rent, NPV spread and common normalization horizon.</p>
+                <p id="execFinancialNarrative" class="exec-fin-copy" style="display:none"></p>
               </div>
               <button class="primary" onclick="switchView('financial')">Open financial analysis</button>
             </div>
@@ -496,7 +493,7 @@
                     <div class="exec-subtitle">Executive financial graphic</div>
                     <div class="exec-chart-title">Normalized occupancy cost by mapped option</div>
                   </div>
-                  <div class="exec-chart-note">Bars use the same marker numbers shown on the map so the team can compare cost by location at a glance.</div>
+                  
                 </div>
                 <div class="exec-chart-wrap"><canvas id="execFinancialChart"></canvas></div><div id="execFinancialAxisLabels" class="exec-axis-labels"></div>
               </div>
@@ -613,9 +610,8 @@
             <div class="map-tools"><button onclick="downloadMatrixCSV()">Export matrix CSV</button><button class="navy" onclick="switchView('financial')">Review financials</button></div>
           </div>
           <div class="panel-body">
-            <div class="analysis-note"><strong>How to use this:</strong> The scorecard should not imply the lowest-cost option is automatically the best building. This matrix compares clear height, loading, trailer parking, office burden, building quality, expansion flexibility, labor/transportation, timing, landlord posture and execution risk across the same option set.</div>
             <div id="matrixSummary" class="matrix-summary-grid"></div>
-            <div class="matrix-toolbar"><span class="pill-note">Columns match the numbered map markers</span><span class="small">Best-in-set items are highlighted where the data is available. Missing items are flagged as needs input.</span></div>
+            
             <div class="matrix-wrap"><table id="qualMatrix" class="matrix-table"></table></div>
           </div>
         </div>
@@ -764,9 +760,9 @@ function renderExecutiveFinancial(){
     lowestEl.textContent='-';
     document.getElementById('execLowestNer').textContent='-';
     document.getElementById('execSpread').textContent='-';
-    document.getElementById('execFinancialNarrative').textContent='Add relocation options and update the financial inputs to summarize the apples-to-apples cost comparison here.';
+    const execNarr=document.getElementById('execFinancialNarrative'); if(execNarr) execNarr.textContent='';
     const summary=document.getElementById('execFinancialSummary');
-    if(summary) summary.innerHTML='<div class="small" style="color:rgba(255,255,255,.72)">Once options and financial assumptions are loaded, the executive page will show the map-linked bar graph and a compact cost comparison table here.</div>';
+    if(summary) summary.innerHTML='';
     renderExecutiveFinancialChart([]);
     return;
   }
@@ -777,7 +773,7 @@ function renderExecutiveFinancial(){
   lowestEl.textContent=low.b.name;
   document.getElementById('execLowestNer').textContent=lowNer?'$'+lowNer.ner.toFixed(2):'-';
   document.getElementById('execSpread').textContent=moneyCompact(spread);
-  document.getElementById('execFinancialNarrative').textContent=`Based on the current assumptions, ${low.b.name} shows the lowest NPV cost over a ${horizon}-year normalization horizon. The graphic below ties each address back to the numbered map markers so the cost comparison can be read directly from the executive page.`;
+  const execNarr2=document.getElementById('execFinancialNarrative'); if(execNarr2) execNarr2.textContent='';
   const summary=document.getElementById('execFinancialSummary');
   if(summary){
     summary.innerHTML='<table class="exec-summary-table"><thead><tr><th>Map</th><th>Option</th><th>NPV cost</th><th>NER</th><th>All-in</th></tr></thead><tbody>'+rows.map(r=>`<tr onclick="selectBuilding('${r.b.id}')"><td><span class="exec-marker-pill">${r.b.optionNo||'•'}</span></td><td><div class="exec-building-cell">${r.b.name}</div><div class="exec-address-cell">${r.b.address||'-'}</div></td><td class="exec-npv">${money0(r.npv)}</td><td>$${r.ner.toFixed(2)}</td><td>$${(r.rent+r.opex).toFixed(2)}</td></tr>`).join('')+'</tbody></table>';
