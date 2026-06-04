@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Industrial relocation scorecard</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --savills-yellow:#FFDF00;
+      --savills-navy:#25273A;
+      --savills-teal:#238291;
+      --ink:#1f2330;
+      --muted:#6b7280;
+      --line:#d9dde5;
+      --soft:#f5f6f8;
+      --white:#ffffff;
+      --danger:#b42318;
+      --good:#127c56;
+      --amber:#a06400;
+      --shadow:0 14px 35px rgba(20, 24, 36, .12);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial, Helvetica, sans-serif;background:#eef0f4;color:var(--ink)}
+    .app{min-height:100vh;display:grid;grid-template-columns:290px 1fr;grid-template-rows:auto 1fr}
+    header{grid-column:1/3;background:var(--savills-navy);color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:5px solid var(--savills-yellow)}
+    .brand{display:flex;align-items:center;gap:18px}
+    .logo{width:118px;height:46px;background:var(--savills-yellow);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;letter-spacing:.2px}
+    h1{font-size:22px;line-height:1.1;margin:0;font-weight:700}
+    .subhead{font-size:12px;opacity:.82;margin-top:4px;text-transform:uppercase;letter-spacing:.12em}
+    .header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    button,.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;transition:.15s ease;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    button:hover,.btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+    button.primary{background:var(--savills-yellow);border-color:var(--savills-yellow);color:#000}
+    button.navy{background:var(--savills-navy);border-color:var(--savills-navy);color:#fff}
+    button.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.28)}
+    aside{background:#fff;border-right:1px solid var(--line);padding:18px;overflow:auto}
+    main{padding:18px;overflow:auto}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+    .panel-header{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fbfbfc}
+    .panel-title{font-weight:800;font-size:15px;margin:0}
+    .panel-body{padding:16px}
+    .nav-pill{display:block;width:100%;text-align:left;border:none;border-radius:10px;background:#fff;padding:12px 12px;margin-bottom:8px;font-weight:700;color:var(--ink)}
+    .nav-pill.active{background:var(--savills-navy);color:#fff;border-left:5px solid var(--savills-yellow)}
+    .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+    .metric{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 8px 20px rgba(20,24,36,.07)}
+    .metric .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+    .metric .value{font-size:28px;font-weight:800;margin-top:6px;color:var(--savills-navy)}
+    .metric .note{font-size:12px;color:var(--muted);margin-top:3px}
+    .workspace{display:grid;grid-template-columns:minmax(420px, 1.12fr) minmax(460px,.88fr);gap:16px;align-items:start}
+    #map{height:560px;width:100%;background:#d9dde5;border-radius:0 0 16px 16px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .form-grid.three{grid-template-columns:1fr 1fr 1fr}
+    label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800;margin-bottom:5px;display:block}
+    input,select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font:inherit;background:#fff;color:var(--ink)}
+    textarea{min-height:68px;resize:vertical}
+    .section-label{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--savills-navy);font-weight:900;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--savills-yellow)}
+    .criteria-row{display:grid;grid-template-columns:1fr 70px 80px;gap:8px;align-items:end;margin-bottom:9px}
+    .criteria-row input[type=number]{text-align:center}
+    .small{font-size:12px;color:var(--muted);line-height:1.4}
+    .building-list{display:flex;flex-direction:column;gap:10px;max-height:480px;overflow:auto;padding-right:4px}
+    .building-card{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;cursor:pointer;transition:.15s ease;position:relative;overflow:hidden}
+    .building-card:hover{border-color:var(--savills-teal);box-shadow:0 8px 20px rgba(35,130,145,.12)}
+    .building-card.active{border-color:var(--savills-navy);box-shadow:0 8px 24px rgba(37,39,58,.16)}
+    .building-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--savills-teal)}
+    .card-top{display:flex;justify-content:space-between;gap:10px;margin-left:8px}
+    .card-title{font-weight:900;font-size:14px;line-height:1.25}
+    .score-badge{min-width:58px;text-align:center;border-radius:999px;background:var(--savills-yellow);color:#000;font-weight:900;padding:6px 8px;font-size:15px;height:max-content}
+    .card-meta{margin:7px 0 0 8px;color:var(--muted);font-size:12px;line-height:1.35}
+    .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0 8px}
+    .tag{font-size:11px;padding:4px 7px;border-radius:999px;background:#f0f2f5;border:1px solid #e1e5eb;color:#3f4656;font-weight:700}
+    .score-good{color:var(--good)}.score-mid{color:var(--amber)}.score-low{color:var(--danger)}
+    table{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
+    th,td{border-bottom:1px solid var(--line);padding:9px;text-align:left;vertical-align:top}
+    th{background:var(--savills-navy);color:#fff;position:sticky;top:0;z-index:2;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+    tbody tr:hover{background:#fbfaf0}
+    .table-wrap{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:14px}
+    .scorebar{height:9px;background:#e7e9ee;border-radius:999px;overflow:hidden;margin-top:3px}.scorebar span{display:block;height:100%;background:var(--savills-teal);width:0%}
+    .view{display:none}.view.active{display:block}
+    .map-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .legend{position:absolute;bottom:22px;right:16px;z-index:500;background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 10px 24px rgba(0,0,0,.18);font-size:12px;line-height:1.5;border:1px solid var(--line)}
+    .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;background:var(--savills-teal);border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);vertical-align:-1px}
+    .relative{position:relative}
+    .leaflet-popup-content{font-family:Arial,Helvetica,sans-serif;min-width:210px}.popup-title{font-weight:900;color:var(--savills-navy);font-size:14px}.popup-score{font-weight:900;background:var(--savills-yellow);display:inline-block;border-radius:999px;padding:4px 8px;color:#000;margin:6px 0}.popup-meta{color:#4b5563;font-size:12px;line-height:1.35}.popup-link{margin-top:8px}
+    .notes{background:#fff8cc;border:1px solid #e7cb00;padding:10px 12px;border-radius:12px;color:#383200;font-size:12px;line-height:1.45;margin-bottom:12px}
+    .client-title{font-size:18px;font-weight:900;color:var(--savills-navy)}
+    .rank-number{font-size:13px;color:var(--muted);font-weight:800;margin-right:3px}
+    .hidden{display:none!important}
+    .danger{color:var(--danger);font-weight:800}.success{color:var(--good);font-weight:800}
+    @media(max-width:1100px){.app{grid-template-columns:1fr}.app header,.app aside,.app main{grid-column:1}aside{border-right:none;border-bottom:1px solid var(--line);display:flex;gap:8px;overflow:auto}.nav-pill{min-width:170px}.metric-grid,.workspace{grid-template-columns:1fr}.header-actions{justify-content:flex-start}.form-grid,.form-grid.three{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">Savills</div>
+        <div>
+          <h1>Industrial relocation scorecard</h1>
+          <div class="subhead">Building comparison, weighted decisioning and map visualization</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="ghost" onclick="loadDemo()">Load demo</button>
+        <button class="ghost" onclick="clearAll()">Reset</button>
+        <button class="primary" onclick="downloadJSON()">Export client file</button>
+        <label class="btn" for="importJson">Import client file</label>
+        <input id="importJson" class="hidden" type="file" accept="application/json" onchange="importJSON(event)">
+      </div>
+    </header>
+
+    <aside>
+      <button class="nav-pill active" data-view="overview" onclick="switchView('overview')">Executive scorecard</button>
+      <button class="nav-pill" data-view="add" onclick="switchView('add')">Add building</button>
+      <button class="nav-pill" data-view="criteria" onclick="switchView('criteria')">Criteria and weights</button>
+      <button class="nav-pill" data-view="table" onclick="switchView('table')">Comparison table</button>
+      <button class="nav-pill" data-view="presentation" onclick="switchView('presentation')">Presentation notes</button>
+      <div class="notes" style="margin-top:12px">
+        Best-use format: one reusable HTML file. Use it live in meetings, save each client as a JSON export, then re-import for future revisions.
+      </div>
+    </aside>
+
+    <main>
+      <div class="metric-grid">
+        <div class="metric"><div class="label">Buildings added</div><div id="metricCount" class="value">0</div><div class="note">Options currently under review</div></div>
+        <div class="metric"><div class="label">Top score</div><div id="metricTop" class="value">-</div><div class="note">Weighted 100-point scale</div></div>
+        <div class="metric"><div class="label">Avg. score</div><div id="metricAvg" class="value">-</div><div class="note">Across active building list</div></div>
+        <div class="metric"><div class="label">Selected building</div><div id="metricSelected" class="value" style="font-size:18px;line-height:1.2">None</div><div class="note">Click a dot or list card</div></div>
+      </div>
+
+      <section id="overview" class="view active">
+        <div class="workspace">
+          <div class="panel relative">
+            <div class="panel-header">
+              <div><p class="panel-title">Map view</p><div class="small">Aerial basemap with state and county lines. Dots are building options.</div></div>
+              <div class="map-tools"><button onclick="fitMap()">Fit to buildings</button><button onclick="toggleBoundaries()">Toggle boundaries</button></div>
+            </div>
+            <div id="map"></div>
+            <div class="legend"><span class="dot"></span>Building option<br><span style="display:inline-block;width:18px;height:3px;background:#FFDF00;margin-right:5px;vertical-align:middle"></span>State/county reference lines</div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><p class="panel-title">Ranked building list</p><button onclick="switchView('add')">Add option</button></div>
+            <div class="panel-body">
+              <div id="buildingList" class="building-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="add" class="view">
+        <div class="workspace">
+          <div class="panel">
+            <div class="panel-header"><p class="panel-title">Add or update building</p><button class="navy" onclick="saveBuilding()">Save building</button></div>
+            <div class="panel-body">
+              <input type="hidden" id="editId">
+              <div class="form-grid">
+                <div><label>Building name</label><input id="bName" placeholder="Example: 300 Ridge Road"></div>
+                <div><label>Address</label><input id="bAddress" placeholder="Street, city, state"></div>
+              </div>
+              <div class="form-grid three" style="margin-top:10px">
+                <div><label>Size needed or available SF</label><input id="bSize" type="number" placeholder="250000"></div>
+                <div><label>Clear height</label><input id="bClear" type="number" placeholder="36"></div>
+                <div><label>Asking rent</label><input id="bRent" type="number" step="0.01" placeholder="12.50"></div>
+              </div>
+              <div class="form-grid three" style="margin-top:10px">
+                <div><label>Docks</label><input id="bDocks" type="number" placeholder="40"></div>
+                <div><label>Office SF</label><input id="bOffice" type="number" placeholder="12000"></div>
+                <div><label>Timing</label><input id="bTiming" placeholder="Q1 2027"></div>
+              </div>
+              <div class="form-grid three" style="margin-top:10px">
+                <div><label>Latitude</label><input id="bLat" type="number" step="any" placeholder="Auto or manual"></div>
+                <div><label>Longitude</label><input id="bLng" type="number" step="any" placeholder="Auto or manual"></div>
+                <div style="display:flex;align-items:end"><button style="width:100%" onclick="geocodeFormAddress()">Find coordinates</button></div>
+              </div>
+              <div style="margin-top:10px"><label>Notes / qualitative comments</label><textarea id="bNotes" placeholder="Operational pros/cons, landlord posture, labor considerations, expansion potential, image quality, risk items."></textarea></div>
+              <div class="section-label">Score inputs, 1 to 5</div>
+              <div id="scoreInputs"></div>
+              <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="navy" onclick="saveBuilding()">Save building</button><button onclick="newBuildingForm()">New blank form</button><button onclick="deleteCurrentBuilding()">Delete selected</button></div>
+              <p class="small" style="margin-top:12px">Address geocoding uses OpenStreetMap Nominatim in the browser. For confidential or offline work, paste latitude and longitude manually from Google Maps or CoStar.</p>
+            </div>
+          </div>
+          <div class="panel relative">
+            <div class="panel-header"><p class="panel-title">Map preview</p><button onclick="fitMap()">Fit map</button></div>
+            <div id="map2" style="height:680px"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="criteria" class="view">
+        <div class="panel">
+          <div class="panel-header"><p class="panel-title">Criteria and weights</p><button class="navy" onclick="saveCriteria()">Save weights</button></div>
+          <div class="panel-body">
+            <div class="notes">Customize the criteria per client. The scorecard works best with 8 to 12 factors, split between financial, operational, location and qualitative decision criteria. Weights should total 100, but the model will normalize automatically if they do not.</div>
+            <div id="criteriaEditor"></div>
+            <button onclick="addCriterion()">Add criterion</button>
+            <button class="navy" onclick="saveCriteria()">Save weights</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="table" class="view">
+        <div class="panel">
+          <div class="panel-header"><p class="panel-title">Detailed comparison table</p><button onclick="downloadCSV()">Export CSV</button></div>
+          <div class="panel-body"><div class="table-wrap"><table id="comparisonTable"></table></div></div>
+        </div>
+      </section>
+
+      <section id="presentation" class="view">
+        <div class="workspace">
+          <div class="panel">
+            <div class="panel-header"><p class="panel-title">Client-facing decision framework</p></div>
+            <div class="panel-body">
+              <div class="client-title">Recommended presentation use</div>
+              <p>This scorecard is designed to show that the relocation process is disciplined, not subjective. It helps a tenant compare competing buildings across total cost, operational fit, labor, transportation access, timing, landlord flexibility, expansion potential and qualitative business impact.</p>
+              <p>Recommended workflow:</p>
+              <ol>
+                <li>Customize criteria and weights for the client’s business priorities.</li>
+                <li>Add each building with address, core specs and 1 to 5 ratings.</li>
+                <li>Use the map to show realistic relocation geography and market coverage.</li>
+                <li>Use the ranked list to guide discussion, not to imply the highest score is automatically the final decision.</li>
+                <li>Export the client file as JSON so the same presentation can be reused and updated later.</li>
+              </ol>
+              <p><strong>Best format:</strong> reusable HTML dashboard, supported by optional static PowerPoint screenshots or exported tables for final client reporting.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><p class="panel-title">Selected building scoring</p></div>
+            <div class="panel-body"><canvas id="scoreChart" height="260"></canvas><div id="selectedNotes" class="small" style="margin-top:12px"></div></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const defaultCriteria = [
+  {key:'total_cost', label:'Total occupancy cost', weight:18, type:'quantitative'},
+  {key:'operational_fit', label:'Operational fit', weight:15, type:'qualitative'},
+  {key:'labor_access', label:'Labor access', weight:12, type:'quantitative'},
+  {key:'transportation', label:'Transportation access', weight:12, type:'quantitative'},
+  {key:'building_quality', label:'Building quality', weight:10, type:'qualitative'},
+  {key:'timing', label:'Timing / availability', weight:9, type:'quantitative'},
+  {key:'expansion', label:'Expansion flexibility', weight:8, type:'qualitative'},
+  {key:'landlord', label:'Landlord flexibility', weight:8, type:'qualitative'},
+  {key:'risk', label:'Execution risk', weight:8, type:'qualitative'}
+];
+let criteria = JSON.parse(localStorage.getItem('scoreCriteria') || 'null') || defaultCriteria;
+let buildings = JSON.parse(localStorage.getItem('scoreBuildings') || '[]');
+let selectedId = buildings[0]?.id || null;
+let map, map2, boundaryLayer, boundaryLayer2, markers=[], markers2=[], scoreChart;
+const stateCountyUrl = 'https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json';
+const topoJsonUrl = 'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js';
+function initMaps(){
+  map = L.map('map',{zoomControl:true}).setView([39.95,-75.16],8);
+  map2 = L.map('map2',{zoomControl:true}).setView([39.95,-75.16],8);
+  const esri='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+  const labels='https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+  [map,map2].forEach(m=>{L.tileLayer(esri,{maxZoom:19, attribution:'Tiles &copy; Esri'}).addTo(m);L.tileLayer(labels,{maxZoom:19, attribution:'Labels &copy; Esri'}).addTo(m);});
+  loadBoundaries();
+}
+function loadBoundaries(){
+  if(!window.topojson){const s=document.createElement('script');s.src=topoJsonUrl;s.onload=loadBoundaries;document.head.appendChild(s);return;}
+  fetch(stateCountyUrl).then(r=>r.json()).then(us=>{
+    const counties=topojson.feature(us, us.objects.counties);
+    const style={color:'#FFDF00',weight:.7,opacity:.65,fillOpacity:0};
+    boundaryLayer=L.geoJSON(counties,{style}).addTo(map);
+    boundaryLayer2=L.geoJSON(counties,{style}).addTo(map2);
+  }).catch(()=>console.log('Boundary layer not available'));
+}
+function toggleBoundaries(){[boundaryLayer,boundaryLayer2].forEach((layer,i)=>{const m=i===0?map:map2;if(!layer)return;m.hasLayer(layer)?m.removeLayer(layer):layer.addTo(m);});}
+function calculateScore(b){
+  const totalWeight = criteria.reduce((s,c)=>s+(Number(c.weight)||0),0)||1;
+  const score = criteria.reduce((s,c)=>s+((Number(b.scores?.[c.key])||0)/5)*(Number(c.weight)||0),0)/totalWeight*100;
+  return Math.round(score);
+}
+function scoreClass(score){return score>=80?'score-good':score>=65?'score-mid':'score-low'}
+function cleanNumber(n){if(n===undefined||n===null||n==='')return '-';return Number(n).toLocaleString();}
+function currency(n){if(n===undefined||n===null||n==='')return '-';return '$'+Number(n).toFixed(2);}
+function render(){
+  localStorage.setItem('scoreCriteria', JSON.stringify(criteria));
+  localStorage.setItem('scoreBuildings', JSON.stringify(buildings));
+  renderMarkers();renderList();renderMetrics();renderInputs();renderCriteriaEditor();renderTable();renderChart();
+}
+function renderMetrics(){
+  const scores=buildings.map(calculateScore);document.getElementById('metricCount').textContent=buildings.length;
+  document.getElementById('metricTop').textContent=scores.length?Math.max(...scores):'-';
+  document.getElementById('metricAvg').textContent=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):'-';
+  const sel=buildings.find(b=>b.id===selectedId);document.getElementById('metricSelected').textContent=sel?sel.name:'None';
+}
+function markerIcon(score){
+  return L.divIcon({className:'',html:`<div style="width:30px;height:30px;border-radius:50%;background:#238291;border:3px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.35),0 8px 18px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:11px">${score}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
+}
+function renderMarkers(){
+  markers.forEach(m=>map.removeLayer(m));markers2.forEach(m=>map2.removeLayer(m));markers=[];markers2=[];
+  buildings.forEach(b=>{
+    if(!Number(b.lat)||!Number(b.lng))return;const score=calculateScore(b);const popup=`<div class="popup-title">${b.name}</div><div class="popup-score">Score: ${score}</div><div class="popup-meta">${b.address||''}<br>${cleanNumber(b.size)} SF | ${b.clear||'-'}' clear | ${currency(b.rent)} asking rent</div><div class="popup-link"><button onclick="selectBuilding('${b.id}')">View details</button></div>`;
+    const m=L.marker([b.lat,b.lng],{icon:markerIcon(score)}).addTo(map).bindPopup(popup);m.on('click',()=>selectBuilding(b.id));markers.push(m);
+    const m2=L.marker([b.lat,b.lng],{icon:markerIcon(score)}).addTo(map2).bindPopup(popup);m2.on('click',()=>selectBuilding(b.id));markers2.push(m2);
+  });
+}
+function fitMap(){const pts=buildings.filter(b=>Number(b.lat)&&Number(b.lng)).map(b=>[b.lat,b.lng]);if(!pts.length)return;const bounds=L.latLngBounds(pts);[map,map2].forEach(m=>m.fitBounds(bounds.pad(.22)));}
+function renderList(){
+  const container=document.getElementById('buildingList');
+  if(!buildings.length){container.innerHTML='<div class="small">No buildings added yet. Add a building manually or load the demo to see the format.</div>';return;}
+  const sorted=[...buildings].sort((a,b)=>calculateScore(b)-calculateScore(a));
+  container.innerHTML=sorted.map((b,i)=>{const score=calculateScore(b);return `<div class="building-card ${b.id===selectedId?'active':''}" onclick="selectBuilding('${b.id}')"><div class="card-top"><div class="card-title"><span class="rank-number">${i+1}.</span>${b.name}</div><div class="score-badge">${score}</div></div><div class="card-meta">${b.address||''}<br>${cleanNumber(b.size)} SF | ${b.clear||'-'}' clear | ${currency(b.rent)} ask | ${b.timing||'Timing TBD'}</div><div class="tag-row"><span class="tag">Docks: ${b.docks||'-'}</span><span class="tag">Office: ${cleanNumber(b.office)} SF</span><span class="tag ${scoreClass(score)}">${score>=80?'Strong fit':score>=65?'Viable option':'Needs caution'}</span></div></div>`}).join('');
+}
+function selectBuilding(id){selectedId=id;const b=buildings.find(x=>x.id===id);if(b&&Number(b.lat)&&Number(b.lng)){map.setView([b.lat,b.lng], Math.max(map.getZoom(), 11));map2.setView([b.lat,b.lng], Math.max(map2.getZoom(), 11));}populateForm(b);render();}
+function renderInputs(){
+  const box=document.getElementById('scoreInputs');if(!box)return;const b=buildings.find(x=>x.id===selectedId)||{};
+  box.innerHTML=criteria.map(c=>`<div class="criteria-row"><div><label>${c.label}</label><div class="small">${c.type} | weight ${c.weight}</div></div><select data-score-key="${c.key}"><option value="">Select</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${(b.scores?.[c.key]==n)?'selected':''}>${n}</option>`).join('')}</select><div><label>Score</label><div class="scorebar"><span style="width:${((b.scores?.[c.key]||0)/5)*100}%"></span></div></div></div>`).join('');
+}
+function renderCriteriaEditor(){
+  const box=document.getElementById('criteriaEditor');if(!box)return;
+  box.innerHTML=criteria.map((c,i)=>`<div class="criteria-row" style="grid-template-columns:1.2fr .5fr .5fr 80px"><div><label>Criterion</label><input data-crit-index="${i}" data-crit-field="label" value="${c.label}"></div><div><label>Weight</label><input type="number" data-crit-index="${i}" data-crit-field="weight" value="${c.weight}"></div><div><label>Type</label><select data-crit-index="${i}" data-crit-field="type"><option value="quantitative" ${c.type==='quantitative'?'selected':''}>Quant.</option><option value="qualitative" ${c.type==='qualitative'?'selected':''}>Qual.</option></select></div><button onclick="removeCriterion(${i})">Remove</button></div>`).join('');
+}
+function saveCriteria(){
+  document.querySelectorAll('[data-crit-index]').forEach(el=>{const i=Number(el.dataset.critIndex);const field=el.dataset.critField;criteria[i][field]=field==='weight'?Number(el.value)||0:el.value;});
+  criteria=criteria.map((c,i)=>({...c,key:c.key||slug(c.label||('criterion_'+i))}));render();
+}
+function addCriterion(){criteria.push({key:'criterion_'+Date.now(), label:'New criterion', weight:5, type:'qualitative'});renderCriteriaEditor();}
+function removeCriterion(i){criteria.splice(i,1);render();}
+function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')+'_'+Date.now();}
+function formBuilding(){
+  const id=document.getElementById('editId').value || 'b_'+Date.now();const scores={};document.querySelectorAll('[data-score-key]').forEach(el=>{if(el.value)scores[el.dataset.scoreKey]=Number(el.value)});
+  return {id,name:document.getElementById('bName').value||document.getElementById('bAddress').value||'Unnamed building',address:document.getElementById('bAddress').value,size:val('bSize'),clear:val('bClear'),rent:val('bRent'),docks:val('bDocks'),office:val('bOffice'),timing:document.getElementById('bTiming').value,lat:Number(document.getElementById('bLat').value)||null,lng:Number(document.getElementById('bLng').value)||null,notes:document.getElementById('bNotes').value,scores};
+}
+function val(id){const v=document.getElementById(id).value;return v===''?'':Number(v);}
+function saveBuilding(){
+  const b=formBuilding();const idx=buildings.findIndex(x=>x.id===b.id);if(idx>=0)buildings[idx]=b;else buildings.push(b);selectedId=b.id;render();switchView('overview');fitMap();
+}
+function populateForm(b){
+  if(!b)return;document.getElementById('editId').value=b.id;document.getElementById('bName').value=b.name||'';document.getElementById('bAddress').value=b.address||'';document.getElementById('bSize').value=b.size||'';document.getElementById('bClear').value=b.clear||'';document.getElementById('bRent').value=b.rent||'';document.getElementById('bDocks').value=b.docks||'';document.getElementById('bOffice').value=b.office||'';document.getElementById('bTiming').value=b.timing||'';document.getElementById('bLat').value=b.lat||'';document.getElementById('bLng').value=b.lng||'';document.getElementById('bNotes').value=b.notes||'';
+}
+function newBuildingForm(){['editId','bName','bAddress','bSize','bClear','bRent','bDocks','bOffice','bTiming','bLat','bLng','bNotes'].forEach(id=>document.getElementById(id).value='');renderInputs();}
+function deleteCurrentBuilding(){if(!selectedId)return;buildings=buildings.filter(b=>b.id!==selectedId);selectedId=buildings[0]?.id||null;newBuildingForm();render();}
+async function geocodeFormAddress(){
+  const q=document.getElementById('bAddress').value;if(!q){alert('Enter an address first.');return;}
+  const url='https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q);
+  try{const res=await fetch(url,{headers:{'Accept':'application/json'}});const data=await res.json();if(!data.length){alert('No location found. Paste lat/long manually.');return;}document.getElementById('bLat').value=Number(data[0].lat).toFixed(6);document.getElementById('bLng').value=Number(data[0].lon).toFixed(6);}catch(e){alert('Geocoding unavailable. Paste lat/long manually.');}
+}
+function renderTable(){
+  const table=document.getElementById('comparisonTable');if(!table)return;
+  const headers=['Rank','Building','Address','Score','SF','Clear','Docks','Office SF','Asking rent','Timing',...criteria.map(c=>c.label),'Notes'];
+  const sorted=[...buildings].sort((a,b)=>calculateScore(b)-calculateScore(a));
+  table.innerHTML='<thead><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>'+sorted.map((b,i)=>`<tr onclick="selectBuilding('${b.id}')"><td>${i+1}</td><td><strong>${b.name}</strong></td><td>${b.address||'-'}</td><td><strong>${calculateScore(b)}</strong></td><td>${cleanNumber(b.size)}</td><td>${b.clear||'-'}</td><td>${b.docks||'-'}</td><td>${cleanNumber(b.office)}</td><td>${currency(b.rent)}</td><td>${b.timing||'-'}</td>${criteria.map(c=>`<td>${b.scores?.[c.key]||'-'}</td>`).join('')}<td>${b.notes||'-'}</td></tr>`).join('')+'</tbody>';
+}
+function renderChart(){
+  const ctx=document.getElementById('scoreChart');if(!ctx)return;const b=buildings.find(x=>x.id===selectedId);if(scoreChart)scoreChart.destroy();
+  if(!b){document.getElementById('selectedNotes').innerHTML='Select a building to view criterion-level scoring.';return;}
+  scoreChart=new Chart(ctx,{type:'bar',data:{labels:criteria.map(c=>c.label),datasets:[{label:b.name,data:criteria.map(c=>b.scores?.[c.key]||0)}]},options:{scales:{y:{min:0,max:5,ticks:{stepSize:1}}},plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false}});
+  document.getElementById('selectedNotes').innerHTML=`<strong>${b.name}</strong><br>${b.address||''}<br><br>${b.notes||'No notes entered.'}`;
+}
+function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav-pill').forEach(b=>b.classList.toggle('active',b.dataset.view===id));setTimeout(()=>{map.invalidateSize();map2.invalidateSize();},160);}
+function downloadJSON(){const data={criteria,buildings,exportedAt:new Date().toISOString(),version:'1.0'};downloadBlob(JSON.stringify(data,null,2),'industrial_scorecard_client_file.json','application/json');}
+function importJSON(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{const data=JSON.parse(reader.result);criteria=data.criteria||criteria;buildings=data.buildings||[];selectedId=buildings[0]?.id||null;render();fitMap();};reader.readAsText(file);}
+function downloadCSV(){
+  const sorted=[...buildings].sort((a,b)=>calculateScore(b)-calculateScore(a));const headers=['Rank','Building','Address','Score','SF','Clear','Docks','Office SF','Asking rent','Timing',...criteria.map(c=>c.label),'Notes'];
+  const rows=sorted.map((b,i)=>[i+1,b.name,b.address,calculateScore(b),b.size,b.clear,b.docks,b.office,b.rent,b.timing,...criteria.map(c=>b.scores?.[c.key]||''),b.notes]);
+  const csv=[headers,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\n');downloadBlob(csv,'industrial_scorecard_comparison.csv','text/csv');
+}
+function downloadBlob(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function clearAll(){if(!confirm('Clear buildings and reset criteria?'))return;criteria=[...defaultCriteria];buildings=[];selectedId=null;newBuildingForm();render();}
+function loadDemo(){
+  criteria=[...defaultCriteria];
+  buildings=[
+    {id:'demo1',name:'Preferred renewal building',address:'Philadelphia, PA',size:220000,clear:32,rent:10.85,docks:38,office:12000,timing:'Available at expiration',lat:39.9526,lng:-75.1652,notes:'Strong continuity and lowest disruption, but landlord leverage may be high without credible alternatives.',scores:{total_cost:4,operational_fit:5,labor_access:4,transportation:4,building_quality:4,timing:5,expansion:3,landlord:3,risk:5}},
+    {id:'demo2',name:'Western suburban option',address:'King of Prussia, PA',size:250000,clear:36,rent:11.75,docks:44,office:15000,timing:'Q2 2027',lat:40.1013,lng:-75.3836,notes:'Higher image quality and better clear height, but relocation cost and timing need to be tested.',scores:{total_cost:3,operational_fit:4,labor_access:4,transportation:5,building_quality:5,timing:3,expansion:4,landlord:4,risk:3}},
+    {id:'demo3',name:'South Jersey alternative',address:'Swedesboro, NJ',size:300000,clear:40,rent:9.95,docks:52,office:9000,timing:'Immediate',lat:39.7476,lng:-75.3105,notes:'Potentially stronger economics and modern specs, but labor impact and commute analysis need client review.',scores:{total_cost:5,operational_fit:4,labor_access:3,transportation:4,building_quality:5,timing:5,expansion:5,landlord:4,risk:3}}
+  ];selectedId='demo1';populateForm(buildings[0]);render();fitMap();
+}
+window.onload=()=>{initMaps();render();if(buildings.length)fitMap();}
+</script>
+</body>
+</html>
