@@ -118,7 +118,7 @@
     .presentation-grid{grid-template-columns:minmax(520px,.95fr) minmax(520px,1.05fr)}
     .chart-panel canvas{height:340px!important}
 
-    .financial-grid{display:grid;grid-template-columns:minmax(520px,.8fr) minmax(560px,1.2fr);gap:16px;align-items:start}
+    .financial-grid{display:grid;grid-template-columns:minmax(480px,.85fr) minmax(560px,1.15fr);gap:16px;align-items:start}.financial-stack{display:grid;gap:16px}.financial-hero{margin-bottom:16px}.financial-hero-grid{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin-bottom:14px}.financial-hero-card{background:linear-gradient(180deg,#fff,#f8faff);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 10px 24px rgba(20,24,36,.06)}.financial-hero-card .label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:900}.financial-hero-card .value{font-size:22px;font-weight:900;color:var(--savills-navy);margin-top:4px;line-height:1.15}.financial-hero-card .note{font-size:11px;color:var(--muted);margin-top:4px}.financial-chart-grid{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:14px}.financial-chart-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 12px 10px;box-shadow:0 10px 24px rgba(20,24,36,.06)}.financial-chart-card .chart-title{font-size:14px;font-weight:900;color:var(--savills-navy);margin-bottom:8px}.financial-mini-chart{height:250px}
     .assumption-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
     .financial-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
     .financial-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;box-shadow:0 8px 20px rgba(20,24,36,.06)}
@@ -147,7 +147,7 @@
     .matrix-badge.good{background:#e8f5ef;border-color:#b7e0cd;color:#086044}
     .matrix-badge.caution{background:#fff2e5;border-color:#ffd0a8;color:#8a3b00}
     .matrix-badge.missing{background:#f4f5f7;border-color:#d7dce3;color:#747b88}
-    .matrix-building-head{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px 12px;min-height:108px;justify-content:flex-start}
+    .matrix-building-head{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px 12px;min-height:190px;justify-content:flex-start}.matrix-thumb{width:100%;height:92px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#394058;display:block}.matrix-thumb-wrap{width:100%;margin-top:2px}
     .matrix-building-top{display:flex;align-items:center;gap:8px;width:100%}
     .matrix-marker{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:var(--savills-teal);color:#fff;border:2px solid rgba(255,255,255,.85);font-weight:900;font-size:11px;flex:0 0 auto;box-shadow:0 0 0 1px rgba(0,0,0,.18)}
     .matrix-marker.current{background:#42B8D4}
@@ -202,7 +202,7 @@
     @media(max-width:1300px){.exec-fin-grid{grid-template-columns:repeat(2,1fr)}.exec-fin-visual{grid-template-columns:1fr}}
     @media(max-width:760px){.exec-fin-header{flex-direction:column}.exec-fin-grid{grid-template-columns:1fr}.exec-chart-wrap{height:260px}}
 
-    @media(max-width:1300px){.metric-grid{grid-template-columns:repeat(2,1fr)}.workspace,.add-workspace,.presentation-grid,.financial-grid{grid-template-columns:1fr}.right-panel-sticky{position:static}}
+    @media(max-width:1300px){.metric-grid{grid-template-columns:repeat(2,1fr)}.workspace,.add-workspace,.presentation-grid,.financial-grid,.financial-chart-grid,.financial-hero-grid{grid-template-columns:1fr}.right-panel-sticky{position:static}}
     @media(max-width:1100px){.app{grid-template-columns:1fr}.app header,.app aside,.app main{grid-column:1}aside{border-right:none;border-bottom:1px solid var(--line);display:flex;gap:8px;overflow:auto}.nav-pill{min-width:170px}.metric-grid,.workspace{grid-template-columns:1fr}.header-actions{justify-content:flex-start}.form-grid,.form-grid.three{grid-template-columns:1fr}}
   
 
@@ -618,37 +618,47 @@
       </section>
 
       <section id="financial" class="view">
+        <div class="panel financial-hero">
+          <div class="panel-header"><p class="panel-title">Financial summary visual</p><button class="primary" onclick="saveFinancialAssumptions()">Update analysis</button></div>
+          <div class="panel-body">
+            <div class="financial-hero-grid">
+              <div class="financial-hero-card"><div class="label">Lowest average annual cost</div><div id="faLowestAnnual" class="value">-</div><div class="note">Average annual occupancy cost</div></div>
+              <div class="financial-hero-card"><div class="label">Lowest average annual PSF</div><div id="faLowestAnnualPsf" class="value">-</div><div class="note">Average annual occupancy cost per SF</div></div>
+              <div class="financial-hero-card"><div class="label">Lowest aggregate cost</div><div id="faLowestAggregate" class="value">-</div><div class="note">Total occupancy cost over the analysis horizon</div></div>
+              <div class="financial-hero-card"><div class="label">Normalization horizon</div><div id="faHorizonMetric" class="value">7 years</div><div class="note">Same time period used for every option</div></div>
+            </div>
+            <div class="financial-chart-grid">
+              <div class="financial-chart-card"><div class="chart-title">Average annual occupancy cost</div><div class="financial-mini-chart"><canvas id="financialAnnualChart"></canvas></div></div>
+              <div class="financial-chart-card"><div class="chart-title">Average annual occupancy cost PSF</div><div class="financial-mini-chart"><canvas id="financialAnnualPsfChart"></canvas></div></div>
+              <div class="financial-chart-card"><div class="chart-title">Aggregate occupancy cost over horizon</div><div class="financial-mini-chart"><canvas id="financialAggregateChart"></canvas></div></div>
+            </div>
+          </div>
+        </div>
         <div class="financial-grid">
-          <div class="panel financial-panel-primary">
-            <div class="panel-header"><p class="panel-title">Apples-to-apples financial analysis</p><button class="primary" onclick="saveFinancialAssumptions()">Update analysis</button></div>
-            <div class="panel-body">
-              <div class="analysis-note"><strong>Normalization horizon:</strong> 7 years is the default because it is a useful starting point for industrial lease comparisons, but it should remain editable. The right horizon should match the client's decision window, expected occupancy period, proposal terms, and internal planning cycle.</div>
-              <div class="assumption-grid">
-                <div><label>Normalization horizon - years</label><input id="faHorizon" type="number" step="1" value="7"></div>
-                <div><label>Discount rate</label><input id="faDiscount" type="number" step="0.25" value="8"></div>
-                <div><label>Default escalation</label><input id="faEscalation" type="number" step="0.25" value="3"></div>
-                <div><label>Analysis size SF</label><input id="faDefaultSF" type="number" placeholder="Use building SF"></div>
-                <div><label>Default market rent after term</label><input id="faMarketRent" type="number" step="0.01" placeholder="Optional"></div>
-                <div><label>Default lease term - years</label><input id="faDefaultTerm" type="number" step="1" placeholder="Use horizon"></div>
+          <div class="financial-stack">
+            <div class="panel financial-panel-primary">
+              <div class="panel-header"><p class="panel-title">Apples-to-apples financial assumptions</p></div>
+              <div class="panel-body">
+                <div class="assumption-grid">
+                  <div><label>Normalization horizon - years</label><input id="faHorizon" type="number" step="1" value="7"></div>
+                  <div><label>Discount rate</label><input id="faDiscount" type="number" step="0.25" value="8"></div>
+                  <div><label>Default escalation</label><input id="faEscalation" type="number" step="0.25" value="3"></div>
+                  <div><label>Analysis size SF</label><input id="faDefaultSF" type="number" placeholder="Use building SF"></div>
+                  <div><label>Default market rent after term</label><input id="faMarketRent" type="number" step="0.01" placeholder="Optional"></div>
+                  <div><label>Default lease term - years</label><input id="faDefaultTerm" type="number" step="1" placeholder="Use horizon"></div>
+                </div>
+                <div class="excluded-box"><label>Excluded / not yet modeled items</label><textarea id="faExcluded" placeholder="Examples: racking relocation, restoration obligations, downtime, labor disruption, utility upgrades, transportation cost impact, client contract impact, tax incentives."></textarea></div>
+                <div class="financial-summary">
+                  <div class="financial-card"><div class="label">Lowest NPV option</div><div id="faLowest" class="value">-</div><div class="note">Discounted cost basis</div></div>
+                  <div class="financial-card"><div class="label">Lowest NER</div><div id="faLowestNer" class="value">-</div><div class="note">Net effective rent PSF/year</div></div>
+                  <div class="financial-card"><div class="label">Lowest nominal total cost</div><div id="faLowestNominal" class="value">-</div><div class="note">Aggregate cost before discounting</div></div>
+                </div>
               </div>
-              <div class="financial-help">
-                <div class="help-card"><strong>Deal structure</strong> Model new lease, renewal, blend-and-extend, sublease, bridge, BTS or purchase alternatives without forcing every option into the same box.</div>
-                <div class="help-card"><strong>Abatement treatment</strong> Separate base rent from OpEx and choose whether free rent abates base rent only or gross rent.</div>
-                <div class="help-card"><strong>Term normalization</strong> Compare all options over one common horizon, even when proposals have different actual lease terms.</div>
-              </div>
-              <div class="excluded-box"><label>Excluded / not yet modeled items</label><textarea id="faExcluded" placeholder="Examples: racking relocation, restoration obligations, downtime, labor disruption, utility upgrades, transportation cost impact, client contract impact, tax incentives."></textarea></div>
-              <div class="financial-summary">
-                <div class="financial-card"><div class="label">Lowest NPV option</div><div id="faLowest" class="value">-</div><div class="note">Over common horizon</div></div>
-                <div class="financial-card"><div class="label">Lowest NER</div><div id="faLowestNer" class="value">-</div><div class="note">Net effective rent PSF/year</div></div>
-                <div class="financial-card"><div class="label">Horizon</div><div id="faHorizonMetric" class="value">7 years</div><div class="note">Same period for every option</div></div>
-              </div>
-              <div class="chart-box"><canvas id="financialChart"></canvas></div>
             </div>
           </div>
           <div class="panel">
             <div class="panel-header"><p class="panel-title">Financial comparison inputs</p><button onclick="downloadFinancialCSV()">Export financial CSV</button></div>
             <div class="panel-body">
-              <div class="table-caption"><span class="pill-note">Relocation options only</span><span class="small">Edit deal type, term, abatement, data quality, concessions and one-time costs directly in the table.</span></div>
               <div class="table-wrap"><table id="financialTable" class="financial-table"></table></div>
             </div>
           </div>
@@ -726,6 +736,12 @@ function loadBoundaries(){
 function toggleBoundaries(){[boundaryLayer,boundaryLayer2].forEach((layer,i)=>{const m=i===0?map:map2;if(!layer)return;m.hasLayer(layer)?m.removeLayer(layer):layer.addTo(m);});}
 function hasScores(b){return criteria.some(c=>Number(b.scores?.[c.key])>0)}
 function isCurrent(b){return b.status==='current'}
+function buildingThumbUrl(b){
+  const lat=Number(b.lat), lng=Number(b.lng);
+  if(!lat || !lng) return "";
+  const dx=0.0042, dy=0.0029;
+  return `https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=${lng-dx},${lat-dy},${lng+dx},${lat+dy}&bboxSR=4326&imageSR=4326&size=320,180&format=jpg&f=image`;
+}
 function calculateScore(b){
   if(isCurrent(b) || !hasScores(b)) return null;
   const totalWeight = criteria.reduce((s,c)=>s+(Number(c.weight)||0),0)||1;
@@ -1008,7 +1024,7 @@ function renderQualMatrix(){
   const cols=current?[current,...opts]:opts;
   renderMatrixSummary(opts);
   if(!cols.length){table.innerHTML='<tbody><tr><td>No buildings loaded.</td></tr></tbody>';return;}
-  const header='<thead><tr><th>Industrial decision factor</th>'+cols.map(b=>`<th><div class="matrix-building-head"><div class="matrix-building-top"><span class="matrix-marker ${isCurrent(b)?'current':''}">${isCurrent(b)?'C':(b.optionNo||'•')}</span><div class="matrix-option-label">${isCurrent(b)?'Current baseline':'Map option #'+(b.optionNo||'')}</div></div><div class="matrix-building-name">${b.name}</div><div class="matrix-building-address">${b.address||''}</div></div></th>`).join('')+'</tr></thead>';
+  const header='<thead><tr><th>Industrial decision factor</th>'+cols.map(b=>`<th><div class="matrix-building-head"><div class="matrix-building-top"><span class="matrix-marker ${isCurrent(b)?'current':''}">${isCurrent(b)?'C':(b.optionNo||'•')}</span><div class="matrix-option-label">${isCurrent(b)?'Current baseline':'Map option #'+(b.optionNo||'')}</div></div><div class="matrix-thumb-wrap">${b.lat&&b.lng?`<img class="matrix-thumb" loading="lazy" src="${buildingThumbUrl(b)}" alt="${b.name} aerial image">`:`<div class="matrix-thumb"></div>`}</div><div class="matrix-building-name">${b.name}</div><div class="matrix-building-address">${b.address||''}</div></div></th>`).join('')+'</tr></thead>';
   const section=(name)=>`<tr class="section-row"><td colspan="${cols.length+1}">${name}</td></tr>`;
   const row=(label,fn,meta='')=>`<tr><td>${label}${meta?`<div class="matrix-meta">${meta}</div>`:''}</td>${cols.map(b=>`<td>${fn(b)}</td>`).join('')}</tr>`;
   const rows=[];
@@ -1157,34 +1173,53 @@ function renderFinancial(){
     document.getElementById('faDefaultTerm').value=financialAssumptions.defaultTerm||'';
     document.getElementById('faExcluded').value=financialAssumptions.excluded||'';
   }
-  const rows=financialRows();
-  const low=rows[0];
-  const lowNer=[...rows].sort((a,b)=>a.ner-b.ner)[0];
+  const rows=financialRows().map(r=>({
+    ...r,
+    avgAnnual:r.nominal/((Number(financialAssumptions.horizon)||7)||1),
+    avgAnnualPsf:r.sf>0 ? r.nominal/(((Number(financialAssumptions.horizon)||7)||1)*r.sf) : 0,
+    aggregate:r.nominal
+  }));
+  const low=rows.length?[...rows].sort((a,b)=>a.npv-b.npv)[0]:null;
+  const lowNer=rows.length?[...rows].sort((a,b)=>a.ner-b.ner)[0]:null;
+  const lowAnnual=rows.length?[...rows].sort((a,b)=>a.avgAnnual-b.avgAnnual)[0]:null;
+  const lowAnnualPsf=rows.length?[...rows].sort((a,b)=>a.avgAnnualPsf-b.avgAnnualPsf)[0]:null;
+  const lowAggregate=rows.length?[...rows].sort((a,b)=>a.aggregate-b.aggregate)[0]:null;
   document.getElementById('faLowest').textContent=low?low.b.name:'-';
   document.getElementById('faLowestNer').textContent=lowNer?'$'+lowNer.ner.toFixed(2):'-';
+  const nominalEl=document.getElementById('faLowestNominal'); if(nominalEl) nominalEl.textContent=lowAggregate?lowAggregate.b.name:'-';
   document.getElementById('faHorizonMetric').textContent=(Number(financialAssumptions.horizon)||7)+' years';
+  const annualEl=document.getElementById('faLowestAnnual'); if(annualEl) annualEl.textContent=lowAnnual?`${lowAnnual.b.name}`:'-';
+  const annualPsfEl=document.getElementById('faLowestAnnualPsf'); if(annualPsfEl) annualPsfEl.textContent=lowAnnualPsf?`${lowAnnualPsf.b.name}`:'-';
+  const aggEl=document.getElementById('faLowestAggregate'); if(aggEl) aggEl.textContent=lowAggregate?`${lowAggregate.b.name}`:'-';
   const dealChoices=[['new_lease','New lease'],['renewal','Renewal'],['blend_extend','Blend + extend'],['sublease','Sublease'],['bridge','Bridge'],['bts','BTS'],['purchase','Purchase']];
   const postChoices=[['continue','Continue terms'],['market','Market after term'],['exclude','Exclude after term']];
   const abateChoices=[['base_only','Base rent only'],['gross','Gross rent']];
   const confChoices=[['proposal_backed','Proposal-backed'],['broker_estimate','Broker estimate'],['market_assumption','Market assumption'],['client_provided','Client-provided'],['placeholder','Placeholder'],['needs_confirmation','Needs confirmation']];
-  const headers=['Option','Deal type','Term yrs','After term','Analysis SF','Base rent','OpEx','All-in','Esc. %','Free mo.','Abate','Market rent','TI / SF','Moving / one-time','Other cost','Data quality','Nominal cost','NPV cost','NER PSF/YR','Normalization note'];
-  table.innerHTML='<thead><tr>'+headers.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>'+rows.map(r=>`<tr><td><strong>${r.b.name}</strong></td><td>${selectHtml(r.b.id,'dealType',r.dealType,dealChoices)}</td><td><input data-fin-id="${r.b.id}" data-fin-field="term" type="number" step="1" value="${r.term||''}"></td><td>${selectHtml(r.b.id,'postTerm',r.postTerm,postChoices)}</td><td><input data-fin-id="${r.b.id}" data-fin-field="analysisSF" type="number" value="${r.sf||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="rent" type="number" step="0.01" value="${r.rent||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="opex" type="number" step="0.01" value="${r.opex||''}"></td><td><strong>$${(r.rent+r.opex).toFixed(2)}</strong></td><td><input data-fin-id="${r.b.id}" data-fin-field="escalation" type="number" step="0.25" value="${r.esc||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="freeMonths" type="number" step="1" value="${r.freeMonths||''}"></td><td>${selectHtml(r.b.id,'abatementType',r.abatementType,abateChoices)}</td><td><input data-fin-id="${r.b.id}" data-fin-field="marketRent" type="number" step="0.01" value="${r.marketRent||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="ti" type="number" step="0.25" value="${r.ti||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="movingCost" type="number" step="1000" value="${r.moving||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="otherCost" type="number" step="1000" value="${r.other||''}"></td><td>${selectHtml(r.b.id,'confidence',r.confidence,confChoices)}</td><td><strong>${money0(r.nominal)}</strong></td><td><strong>${money0(r.npv)}</strong></td><td><strong>$${r.ner.toFixed(2)}</strong></td><td>${r.termFlag}</td></tr>`).join('')+'</tbody>';
-  renderFinancialChart(rows);
+  const headers=['Option','Deal type','Term yrs','After term','Analysis SF','Base rent','OpEx','All-in','Esc. %','Free mo.','Abate','Market rent','TI / SF','Moving / one-time','Other cost','Data quality','Nominal cost','NPV cost','Avg annual','Avg annual PSF','NER PSF/YR','Normalization note'];
+  table.innerHTML='<thead><tr>'+headers.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>'+rows.map(r=>`<tr><td><strong>${r.b.name}</strong></td><td>${selectHtml(r.b.id,'dealType',r.dealType,dealChoices)}</td><td><input data-fin-id="${r.b.id}" data-fin-field="term" type="number" step="1" value="${r.term||''}"></td><td>${selectHtml(r.b.id,'postTerm',r.postTerm,postChoices)}</td><td><input data-fin-id="${r.b.id}" data-fin-field="analysisSF" type="number" value="${r.sf||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="rent" type="number" step="0.01" value="${r.rent||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="opex" type="number" step="0.01" value="${r.opex||''}"></td><td><strong>$${(r.rent+r.opex).toFixed(2)}</strong></td><td><input data-fin-id="${r.b.id}" data-fin-field="escalation" type="number" step="0.25" value="${r.esc||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="freeMonths" type="number" step="1" value="${r.freeMonths||''}"></td><td>${selectHtml(r.b.id,'abatementType',r.abatementType,abateChoices)}</td><td><input data-fin-id="${r.b.id}" data-fin-field="marketRent" type="number" step="0.01" value="${r.marketRent||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="ti" type="number" step="0.25" value="${r.ti||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="movingCost" type="number" step="1000" value="${r.moving||''}"></td><td><input data-fin-id="${r.b.id}" data-fin-field="otherCost" type="number" step="1000" value="${r.other||''}"></td><td>${selectHtml(r.b.id,'confidence',r.confidence,confChoices)}</td><td><strong>${money0(r.nominal)}</strong></td><td><strong>${money0(r.npv)}</strong></td><td><strong>${money0(r.avgAnnual)}</strong></td><td><strong>$${r.avgAnnualPsf.toFixed(2)}</strong></td><td><strong>$${r.ner.toFixed(2)}</strong></td><td>${r.termFlag}</td></tr>`).join('')+'</tbody>';
+  renderFinancialCharts(rows);
 }
-function renderFinancialChart(rows){
-  const ctx=document.getElementById('financialChart'); if(!ctx) return;
-  if(financialChart) financialChart.destroy();
-  financialChart=new Chart(ctx,{
+function renderFinancialCharts(rows){
+  renderSimpleFinancialChart('financialAnnualChart', rows, 'avgAnnual', '$ / year', (v)=>'$'+(v/1000000).toFixed(1)+'M');
+  renderSimpleFinancialChart('financialAnnualPsfChart', rows, 'avgAnnualPsf', '$ / SF / yr', (v)=>'$'+Number(v).toFixed(2));
+  renderSimpleFinancialChart('financialAggregateChart', rows, 'aggregate', '$ total', (v)=>'$'+(v/1000000).toFixed(1)+'M');
+}
+function renderSimpleFinancialChart(canvasId, rows, field, label, tickFmt){
+  const ctx=document.getElementById(canvasId); if(!ctx) return;
+  window.finCharts = window.finCharts || {};
+  if(window.finCharts[canvasId]) window.finCharts[canvasId].destroy();
+  window.finCharts[canvasId]=new Chart(ctx,{
     type:'bar',
-    data:{labels:rows.map(r=>r.b.name),datasets:[{label:'NPV occupancy cost',data:rows.map(r=>Math.round(r.npv)),backgroundColor:'#238291',borderColor:'#238291'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>money0(c.raw)}}},scales:{y:{ticks:{callback:(v)=>'$'+(v/1000000).toFixed(1)+'M'}},x:{ticks:{maxRotation:35,minRotation:0}}}}
+    data:{labels:rows.map(r=>'#'+(r.b.optionNo||'•')),datasets:[{label, data:rows.map(r=>r[field]), backgroundColor:rows.map((r,i)=> i===0 ? '#FFDF00' : '#238291'), borderColor:rows.map((r,i)=> i===0 ? '#FFDF00' : '#238291'), borderRadius:8, maxBarThickness:46}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:(items)=>{const row=rows[items[0].dataIndex]; return `#${row.b.optionNo||'•'} ${row.b.name}`;},label:(c)=>`${label}: ${field==='avgAnnualPsf' ? '$'+Number(c.raw).toFixed(2) : money0(c.raw)}`}}},scales:{y:{ticks:{callback:tickFmt},grid:{color:'#edf0f4'}},x:{grid:{display:false}}}}
   });
 }
 function money0(n){return '$'+Math.round(Number(n)||0).toLocaleString();}
 function downloadFinancialCSV(){
   saveFinancialAssumptions();
-  const headers=['Option','Deal type','Term years','After term treatment','Analysis SF','Base rent','OpEx','All-in','Escalation %','Free months','Abatement type','Market rent after term','TI/SF','Moving cost','Other cost','Data quality','Nominal cost','NPV cost','NER PSF/YR','Normalization note','Horizon years','Discount rate','Excluded/not modeled'];
-  const rows=financialRows().map(r=>[r.b.name,r.dealType,r.term,r.postTerm,r.sf,r.rent,r.opex,(r.rent+r.opex).toFixed(2),r.esc,r.freeMonths,r.abatementType,r.marketRent,r.ti,r.moving,r.other,r.confidence,Math.round(r.nominal),Math.round(r.npv),r.ner.toFixed(2),r.termFlag,financialAssumptions.horizon,financialAssumptions.discountRate,financialAssumptions.excluded||'']);
+  const headers=['Option','Deal type','Term years','After term treatment','Analysis SF','Base rent','OpEx','All-in','Escalation %','Free months','Abatement type','Market rent after term','TI/SF','Moving cost','Other cost','Data quality','Nominal cost','NPV cost','Average annual cost','Average annual PSF','NER PSF/YR','Normalization note','Horizon years','Discount rate','Excluded/not modeled'];
+  const horizon=(Number(financialAssumptions.horizon)||7)||1;
+  const rows=financialRows().map(r=>[r.b.name,r.dealType,r.term,r.postTerm,r.sf,r.rent,r.opex,(r.rent+r.opex).toFixed(2),r.esc,r.freeMonths,r.abatementType,r.marketRent,r.ti,r.moving,r.other,r.confidence,Math.round(r.nominal),Math.round(r.npv),Math.round(r.nominal/horizon),r.sf? (r.nominal/(r.sf*horizon)).toFixed(2):'',r.ner.toFixed(2),r.termFlag,financialAssumptions.horizon,financialAssumptions.discountRate,financialAssumptions.excluded||'']);
   const csv=[headers,...rows].map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\n');downloadBlob(csv,'industrial_scorecard_financial_analysis.csv','text/csv');
 }
 
